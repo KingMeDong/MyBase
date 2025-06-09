@@ -33,7 +33,8 @@ namespace MyBase.Pages.Account {
                 HttpContext.Session.SetString("Username", user.Username);
                 HttpContext.Session.SetString("DisplayName", user.DisplayName ?? user.Username);
 
-                return RedirectToPage("/Index"); // später Dashboard
+                return RedirectToPage("/Dashboard");
+
             } else {
                 ErrorMessage = "Ungültiger Benutzername oder Passwort.";
                 return Page();
