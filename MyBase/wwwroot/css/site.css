@@ -351,3 +351,106 @@ footer {
         text-decoration: none;
         color: #ffffff;
     }
+
+
+
+
+.password-form {
+    max-width: 600px;
+    background-color: #161b22;
+    border: 1px solid #30363d;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+    .password-form div {
+        margin-bottom: 1rem;
+    }
+
+    .password-form label {
+        display: block;
+        margin-bottom: 0.3rem;
+        font-weight: bold;
+        color: #c9d1d9;
+    }
+
+    .password-form input,
+    .password-form textarea {
+        width: 100%;
+        padding: 0.5rem;
+        background-color: #0d1117;
+        border: 1px solid #30363d;
+        color: #c9d1d9;
+        border-radius: 0.25rem;
+    }
+textarea {
+    resize: vertical;
+}
+
+/* Button Styles */
+.btn-green {
+    display: inline-block;
+    background-color: #238636;
+    color: #ffffff;
+    font-weight: bold;
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: 0.4rem;
+    text-decoration: none;
+    transition: background-color 0.2s ease-in-out;
+    cursor: pointer;
+    margin-right: 0.5rem;
+}
+
+    .btn-green:hover {
+        background-color: #2ea043;
+    }
+
+.btn-gray {
+    display: inline-block;
+    background-color: #30363d;
+    color: #ffffff;
+    font-weight: bold;
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: 0.4rem;
+    text-decoration: none;
+    transition: background-color 0.2s ease-in-out;
+    cursor: pointer;
+}
+
+    .btn-gray:hover {
+        background-color: #484f58;
+    }
+
+/* Aktionen Wrapper */
+.form-actions {
+    margin-top: 1.5rem;
+}
+
+.media-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.media-card {
+    background-color: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 0.5rem;
+    padding: 2rem;
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-align: center;
+    color: #f0f6fc;
+    text-decoration: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    transition: transform 0.2s ease-in-out;
+}
+
+    .media-card:hover {
+        transform: translateY(-4px);
+        background-color: #21262d;
+    }

@@ -1,0 +1,40 @@
+﻿@page
+@model MyBase.Pages.Passwords.CreateModel
+@{
+    ViewData["Title"] = "Neues Passwort hinzufügen";
+}
+
+<h2 class="page-title">🔐 Neues Passwort hinzufügen</h2>
+
+<form method="post" class="password-form">
+    <div>
+        <label for="Title">Titel</label>
+        <input asp-for="PasswordEntry.Title" />
+    </div>
+    <div>
+        <label for="Username">Benutzername</label>
+        <input asp-for="PasswordEntry.Username" />
+    </div>
+    <div>
+        <label for="Password">Passwort</label>
+        <input asp-for="PasswordEntry.Password" type="password" />
+    </div>
+    <div>
+        <label for="Url">URL</label>
+        <input asp-for="PasswordEntry.Url" />
+    </div>
+    <div>
+        <label for="Note">Notiz</label>
+        <textarea asp-for="PasswordEntry.Note" rows="5"></textarea>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn-green">💾 Speichern</button>
+        <a class="btn-gray" href="/Passwords/Index">Zurück</a>
+    </div>
+
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
