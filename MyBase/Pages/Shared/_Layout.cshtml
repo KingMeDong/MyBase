@@ -11,24 +11,34 @@
 @{
     var isLoginPage = Context.Request.Path.StartsWithSegments("/Account/Login");
 }
-
+<script>
+    function toggleMenu() {
+        var menu = document.getElementById("navbarLinks");
+        menu.classList.toggle("show");
+    }
+</script>
 <body>
     @if (!isLoginPage)
     {
         <header>
-            <nav class="navbar">
-                <div class="navbar-left">
-                    <a href="/Dashboard" class="navbar-brand">MyBase</a>
-                </div>
-                <div class="navbar-right">
-                    @if (Context.Session.GetString("Username") != null)
-                    {
-                        <a href="/Dashboard">Dashboard</a>
-                        <a href="/Account/Logout">Logout</a>
-                    }
-                </div>
-            </nav>
-        </header>
+    <nav class="navbar">
+        <div class="navbar-left">
+            <a href="/Dashboard" class="navbar-brand">MyBase</a>
+        </div>
+
+        <!-- Burger Icon -->
+        <div class="burger" onclick="toggleMenu()">&#9776;</div>
+
+        <!-- Navbar Links -->
+        <div class="navbar-right" id="navbarLinks">
+            @if (Context.Session.GetString("Username") != null)
+            {
+                <a href="/Dashboard">Dashboard</a>
+                <a href="/Account/Logout">Logout</a>
+            }
+        </div>
+    </nav>
+</header>
     }
 
     <main role="main">

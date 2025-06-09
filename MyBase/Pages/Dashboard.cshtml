@@ -4,8 +4,40 @@
     ViewData["Title"] = "Dashboard";
 }
 
-<a href="/Account/Logout" style="float:right; color:#58a6ff; text-decoration:none; font-weight:bold;">Logout</a>
 <h2>Willkommen @ViewData["DisplayName"]!</h2>
-<p>Dies ist dein Dashboard.</p>
+<div class="system-status">
+    <h3>🖴 System-Status</h3>
+    <p>Speicher (Laufwerk @Model.SystemStatus.DriveLetter):</p>
 
+    <div class="progress-bar-container">
+        <div class="progress-bar-fill" style="width:@Model.SystemStatus.UsedPercentage.ToString("F1")%"></div>
+    </div>
+    <p>@Model.SystemStatus.UsedPercentage.ToString("F1")% belegt</p>
+
+    <ul>
+        <li>Gesamt: @DashboardModel.FormatBytes(Model.SystemStatus.TotalSpace)</li>
+        <li>Belegt: @DashboardModel.FormatBytes(Model.SystemStatus.UsedSpace)</li>
+        <li>Frei: @DashboardModel.FormatBytes(Model.SystemStatus.FreeSpace)</li>
+    </ul>
+</div>
+<p>Wähle eine Funktion:</p>
+
+<div class="dashboard-grid">
+    <a href="/Passwortmanager" class="dashboard-card">
+        <div class="dashboard-icon">🔑</div>
+        <div class="dashboard-title">Passwortmanager</div>
+    </a>
+    <a href="/Bilder" class="dashboard-card">
+        <div class="dashboard-icon">🖼️</div>
+        <div class="dashboard-title">Bilder & Videos</div>
+    </a>
+    <a href="/Notizen" class="dashboard-card">
+        <div class="dashboard-icon">📝</div>
+        <div class="dashboard-title">Notizen</div>
+    </a>
+    <a href="/CodeRepository" class="dashboard-card">
+        <div class="dashboard-icon">💻</div>
+        <div class="dashboard-title">Code Repository</div>
+    </a>
+</div>
 
