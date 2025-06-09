@@ -10,7 +10,8 @@
     <p>Speicher (Laufwerk @Model.SystemStatus.DriveLetter):</p>
 
     <div class="progress-bar-container">
-        <div class="progress-bar-fill" style="width:@Model.SystemStatus.UsedPercentage.ToString("F1")%"></div>
+        <div class="progress-bar-fill" style="width:@(Math.Round(Model.SystemStatus.UsedPercentage))%"></div>
+
     </div>
     <p>@Model.SystemStatus.UsedPercentage.ToString("F1")% belegt</p>
 
@@ -23,7 +24,7 @@
 <p>Wähle eine Funktion:</p>
 
 <div class="dashboard-grid">
-    <a href="/Passwortmanager" class="dashboard-card">
+    <a href="/Passwords/Index" class="dashboard-card">
         <div class="dashboard-icon">🔑</div>
         <div class="dashboard-title">Passwortmanager</div>
     </a>

@@ -266,3 +266,88 @@ footer {
         grid-template-columns: 1fr; /* 1 Spalte */
     }
 }
+
+
+
+/* Passwortmanager Page - Card Look */
+
+.passwordmanager-actions {
+    margin-bottom: 1rem;
+}
+
+.password-card-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.password-card {
+    background-color: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.2s ease-in-out;
+}
+
+    .password-card:hover {
+        transform: translateY(-4px);
+    }
+
+.password-card-header {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    color: #f0f6fc;
+}
+
+.password-card-body p {
+    margin: 0.25rem 0;
+}
+
+.password-card-body a {
+    color: #58a6ff;
+    text-decoration: none;
+}
+
+    .password-card-body a:hover {
+        text-decoration: underline;
+    }
+
+.password-card-actions {
+    margin-top: 1rem;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+/* Responsive Optimierung: Cards umbrechen schön */
+@media (max-width: 600px) {
+    .password-card-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+
+.add-password-btn {
+    display: inline-block;
+    background-color: #238636;
+    color: #ffffff;
+    font-weight: bold;
+    padding: 0.6rem 1.2rem;
+    border-radius: 0.4rem;
+    text-decoration: none;
+    transition: background-color 0.2s ease-in-out;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+    .add-password-btn:hover {
+        background-color: #2ea043;
+        text-decoration: none;
+        color: #ffffff;
+    }

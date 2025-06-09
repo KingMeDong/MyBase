@@ -7,5 +7,7 @@ namespace MyBase.Data {
         }
 
         public DbSet<User> Users { get; set; }
+        public DbSet<MyBase.Models.PasswordEntry> Passwords { get; set; }
+
     }
 }

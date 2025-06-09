@@ -1,0 +1,34 @@
+﻿@page
+@model MyBase.Pages.Passwords.IndexModel
+@{
+    ViewData["Title"] = "Passwortmanager";
+}
+
+<h2 class="page-title">🔑 Passwortmanager</h2>
+
+<div class="passwordmanager-actions">
+    <a href="/Passwords/Create" class="add-password-btn">
+        ➕ Neues Passwort hinzufügen
+    </a>
+</div>
+
+
+<div class="password-card-container">
+    @foreach (var item in Model.Passwords) {
+        <div class="password-card">
+            <div class="password-card-header">
+                🔑 @item.Title
+            </div>
+            <div class="password-card-body">
+                <p><strong>Benutzername:</strong> @item.Username</p>
+                @if (!string.IsNullOrEmpty(item.Url)) {
+                    <p><strong>URL:</strong> <a href="@item.Url" target="_blank">@item.Url</a></p>
+                }
+                <div class="password-card-actions">
+                    <a class="btn btn-sm btn-primary disabled">Bearbeiten</a>
+                    <a class="btn btn-sm btn-danger disabled">Löschen</a>
+                </div>
+            </div>
+        </div>
+    }
+</div>

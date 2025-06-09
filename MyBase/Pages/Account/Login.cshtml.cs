@@ -32,6 +32,7 @@ namespace MyBase.Pages.Account {
                 // Session setzen
                 HttpContext.Session.SetString("Username", user.Username);
                 HttpContext.Session.SetString("DisplayName", user.DisplayName ?? user.Username);
+                HttpContext.Session.SetString("UserId", user.Id.ToString());
 
                 return RedirectToPage("/Dashboard");
 
