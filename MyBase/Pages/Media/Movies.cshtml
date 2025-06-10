@@ -1,0 +1,19 @@
+﻿@page
+@model MyBase.Pages.Media.MoviesModel
+@{
+    ViewData["Title"] = "Filme";
+}
+
+<h2 class="page-title">🎬 Filme</h2>
+
+@if (Model.VideoFiles.Any()) {
+    <ul class="media-file-list">
+        @foreach (var file in Model.VideoFiles) {
+            <li>
+                🎞️ @file.Name (@file.Length / 1024 / 1024) MB
+            </li>
+        }
+    </ul>
+} else {
+    <p>Keine Filme gefunden.</p>
+}

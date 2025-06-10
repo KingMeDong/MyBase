@@ -454,3 +454,25 @@ textarea {
         transform: translateY(-4px);
         background-color: #21262d;
     }
+
+
+.media-file-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 1rem;
+}
+
+    .media-file-list li {
+        background-color: #161b22;
+        border: 1px solid #30363d;
+        padding: 0.75rem 1rem;
+        margin-bottom: 0.5rem;
+        border-radius: 0.4rem;
+        color: #c9d1d9;
+        transition: background-color 0.2s ease-in-out;
+    }
+
+        .media-file-list li:hover {
+            background-color: #21262d;
+            cursor: default;
+        }
