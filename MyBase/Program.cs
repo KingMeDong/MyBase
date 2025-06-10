@@ -2,6 +2,12 @@ using Microsoft.EntityFrameworkCore;
 using MyBase.Data; // hinzufügen
 var builder = WebApplication.CreateBuilder(args);
 
+
+builder.Configuration
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
+
+
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddSession();
