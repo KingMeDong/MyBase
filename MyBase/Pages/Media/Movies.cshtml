@@ -26,21 +26,27 @@
 
 @if (Model.SubDirectories.Any()) {
     <h3>Ordner:</h3>
-    <ul class="media-file-list">
+    <ul class="media-folder-list">
         @foreach (var dir in Model.SubDirectories) {
-            <li>
-                📁 <a href="/Media/Movies?path=@Model.GetEncodedPath(dir.FullName)">@dir.Name</a>
+            <li class="media-folder-item">
+                <a href="/Media/Movies?path=@Model.GetEncodedPath(dir.FullName)" class="media-folder-button">
+                     @dir.Name
+                </a>
             </li>
         }
     </ul>
+
 }
 
 @if (Model.VideoFiles.Any()) {
     <h3>Videos:</h3>
-    <ul class="media-file-list">
+    <ul class="media-video-list">
         @foreach (var file in Model.VideoFiles) {
-            <li>
-                🎞️ <a href="/Media/Play?path=@Model.GetEncodedPath(file.FullName)">@file.Name</a> (@file.Length / 1024 / 1024) MB
+            <li class="media-video-item">
+                <a href="/Media/Play?path=@Model.GetEncodedPath(file.FullName)" class="media-video-button">
+                    🎞️ @file.Name
+                    <span class="media-video-size">(@(file.Length / 1024 / 1024) MB)</span>
+                </a>
             </li>
         }
     </ul>
