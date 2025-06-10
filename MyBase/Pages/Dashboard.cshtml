@@ -5,13 +5,14 @@
 }
 
 <h2>Willkommen @ViewData["DisplayName"]!</h2>
-<div class="system-status">
+
+<!-- Speicher Card -->
+<div class="system-status-card">
     <h3>🖴 System-Status</h3>
     <p>Speicher (Laufwerk @Model.SystemStatus.DriveLetter):</p>
 
     <div class="progress-bar-container">
         <div class="progress-bar-fill" style="width:@(Math.Round(Model.SystemStatus.UsedPercentage))%"></div>
-
     </div>
     <p>@Model.SystemStatus.UsedPercentage.ToString("F1")% belegt</p>
 
@@ -21,6 +22,27 @@
         <li>Frei: @DashboardModel.FormatBytes(Model.SystemStatus.FreeSpace)</li>
     </ul>
 </div>
+
+<!-- CPU / RAM Card -->
+<div class="system-status-card">
+    <h3>📊 Systemstatus</h3>
+
+    <div class="progress-bar-container">
+        <div class="progress-bar-fill" id="cpuBar" style="width: 0%;"></div>
+    </div>
+    <p>CPU: <span id="cpuUsage">-</span> %</p>
+
+    <div class="progress-bar-container">
+        <div class="progress-bar-fill" id="ramBar" style="width: 0%;"></div>
+    </div>
+    <p>RAM: <span id="ramUsage">-</span> %</p>
+</div>
+
+
+
+
+
+
 <p>Wähle eine Funktion:</p>
 
 <div class="dashboard-grid">
@@ -48,3 +70,22 @@
 </div>
 
 
+@section Scripts {
+    <script>
+        function updateSystemStatus() {
+            fetch('/api/SystemStatus')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('cpuUsage').textContent = data.cpuUsage;
+                    document.getElementById('ramUsage').textContent = data.ramUsage;
+
+                    document.getElementById('cpuBar').style.width = data.cpuUsage + '%';
+                    document.getElementById('ramBar').style.width = data.ramUsage + '%';
+                });
+        }
+
+        setInterval(updateSystemStatus, 1000);
+        updateSystemStatus(); // initial
+
+    </script>
+}
