@@ -1,0 +1,21 @@
+﻿@page
+@model MyBase.Pages.Media.PlayModel
+@{
+    ViewData["Title"] = "Film abspielen";
+}
+
+<h2 class="page-title">🎬 Film abspielen</h2>
+
+<p>
+    Aktueller Film:
+    <strong>@Model.FileName</strong>
+</p>
+
+<video width="100%" controls autoplay>
+    <source src="/Media/Stream?path=@Model.EncodedPath" type="video/mp4">
+    Dein Browser unterstützt kein HTML5 Video.
+</video>
+
+<p>
+    <a class="btn-gray" href="/Media/Movies?path=@Model.GetEncodedPath(Model.ReturnPath)">⬅️ Zurück zum Ordner</a>
+</p>

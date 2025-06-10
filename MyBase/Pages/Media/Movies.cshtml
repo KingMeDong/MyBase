@@ -40,7 +40,7 @@
     <ul class="media-file-list">
         @foreach (var file in Model.VideoFiles) {
             <li>
-                🎞️ @file.Name (@file.Length / 1024 / 1024) MB
+                🎞️ <a href="/Media/Play?path=@Model.GetEncodedPath(file.FullName)">@file.Name</a> (@file.Length / 1024 / 1024) MB
             </li>
         }
     </ul>
