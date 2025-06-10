@@ -6,7 +6,37 @@
 
 <h2 class="page-title">🎬 Filme</h2>
 
+<p>
+    Aktueller Pfad:
+    <strong>@(string.IsNullOrEmpty(Model.RelativePath) ? "/" : Model.RelativePath)</strong>
+</p>
+
+
+@{
+    var rootPath = $"{Model.CurrentPath.Substring(0, 2)}\\Filme";
+}
+@if (Model.CurrentPath != Model.RootPath) {
+    // Backlink (1 Ordner zurück)
+    var parentPath = System.IO.Path.GetDirectoryName(Model.CurrentPath);
+
+    <p>
+        <a class="btn-gray" href="/Media/Movies?path=@Model.GetEncodedPath(parentPath)">⬅️ Zurück</a>
+    </p>
+}
+
+@if (Model.SubDirectories.Any()) {
+    <h3>Ordner:</h3>
+    <ul class="media-file-list">
+        @foreach (var dir in Model.SubDirectories) {
+            <li>
+                📁 <a href="/Media/Movies?path=@Model.GetEncodedPath(dir.FullName)">@dir.Name</a>
+            </li>
+        }
+    </ul>
+}
+
 @if (Model.VideoFiles.Any()) {
+    <h3>Videos:</h3>
     <ul class="media-file-list">
         @foreach (var file in Model.VideoFiles) {
             <li>
@@ -14,6 +44,6 @@
             </li>
         }
     </ul>
-} else {
-    <p>Keine Filme gefunden.</p>
+} else if (!Model.SubDirectories.Any()) {
+    <p>Keine Videos in diesem Ordner gefunden.</p>
 }

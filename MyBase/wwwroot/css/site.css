@@ -474,5 +474,23 @@ textarea {
 
         .media-file-list li:hover {
             background-color: #21262d;
-            cursor: default;
+            cursor: pointer;
         }
+
+.btn-gray {
+    display: inline-block;
+    background-color: #30363d;
+    color: #ffffff;
+    font-weight: bold;
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: 0.4rem;
+    text-decoration: none;
+    transition: background-color 0.2s ease-in-out;
+    cursor: pointer;
+    margin-bottom: 1rem;
+}
+
+    .btn-gray:hover {
+        background-color: #484f58;
+    }
