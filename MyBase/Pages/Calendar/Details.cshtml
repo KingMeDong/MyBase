@@ -4,84 +4,80 @@
     ViewData["Title"] = "Termin Details / Bearbeiten";
 }
 
-<h2>📋 Termin Details / Bearbeiten</h2>
+<h2 class="page-title">🗒️ Termin Details / Bearbeiten</h2>
 
-<form method="post">
-    <input type="hidden" asp-for="Event.Id" />
-
-    <div>
-        <label>Titel</label>
-        <input asp-for="Event.Title" />
-        <span asp-validation-for="Event.Title"></span>
+<form method="post" class="form-container">
+    <div class="form-group">
+        <label asp-for="CalendarEvent.Title"></label>
+        <input asp-for="CalendarEvent.Title" class="form-control" />
     </div>
 
-    <div>
-        <label>Ort</label>
-        <input asp-for="Event.Location" />
+    <div class="form-group">
+        <label asp-for="CalendarEvent.Location"></label>
+        <input asp-for="CalendarEvent.Location" class="form-control" />
     </div>
 
-    <div>
-        <label>Beschreibung</label>
-        <textarea asp-for="Event.Description"></textarea>
+    <div class="form-group">
+        <label asp-for="CalendarEvent.Description"></label>
+        <textarea asp-for="CalendarEvent.Description" class="form-control"></textarea>
     </div>
 
-    <div>
-        <label>Start</label>
-        <input type="datetime-local" asp-for="Event.StartDateTime" />
-        <span asp-validation-for="Event.StartDateTime"></span>
+  <div class="form-group form-group-datetime">
+    <div class="form-group-inline">
+        <label asp-for="CalendarEvent.StartDateTime"></label>
+        <input asp-for="CalendarEvent.StartDateTime" type="datetime-local" class="form-control" asp-format="{0:yyyy-MM-ddTHH:mm}" />
     </div>
 
-    <div>
-        <label>Ende</label>
-        <input type="datetime-local" asp-for="Event.EndDateTime" />
-        <span asp-validation-for="Event.EndDateTime"></span>
+    <div class="form-group-inline">
+        <label asp-for="CalendarEvent.EndDateTime"></label>
+        <input asp-for="CalendarEvent.EndDateTime" type="datetime-local" class="form-control" asp-format="{0:yyyy-MM-ddTHH:mm}" />
     </div>
+</div>
 
-    
-
-    <div>
-        <label>
-            <input type="checkbox" asp-for="Event.IsReminderEnabled" id="reminderCheckbox" />
-            E-Mail Reminder aktivieren
-        </label>
-    </div>
-
-    <div id="reminderFields" style="margin-top: 1rem;">
-        <div>
-            <label>Erinnerung (Minuten vor Termin)</label>
-            <input type="number" asp-for="Event.ReminderMinutesBefore" min="1" max="10080" placeholder="z.B. 60 für 1h vorher" />
-        </div>
-
-        <div>
-            <label>E-Mail für Erinnerung</label>
-            <input type="email" asp-for="Event.ReminderEmailAddress" placeholder="z.B. user@example.com" />
+    <div class="form-group">
+        <div class="form-check">
+            <input asp-for="CalendarEvent.ReminderEnabled" class="form-check-input" type="checkbox" id="reminderToggle" />
+            <label class="form-check-label" for="reminderToggle">📧 E-Mail Reminder aktivieren</label>
         </div>
     </div>
 
-    @section Scripts {
-        <script>
-            function updateReminderFields() {
-                var checkbox = document.getElementById("reminderCheckbox");
-                var fields = document.getElementById("reminderFields");
+    <!-- Reminder Settings block -->
+    <div id="reminderSettings" class="reminder-settings @(Model.CalendarEvent.ReminderEnabled ? "" : "hidden")">
+        <div class="form-group">
+            <label asp-for="CalendarEvent.ReminderMinutesBefore"></label>
+            <input asp-for="CalendarEvent.ReminderMinutesBefore" type="number" min="1" class="form-control" />
+        </div>
 
-                if (checkbox.checked) {
-                    fields.style.display = "block";
-                } else {
-                    fields.style.display = "none";
-                }
-            }
+        <div class="form-group">
+            <label asp-for="CalendarEvent.ReminderEmail"></label>
+            <input asp-for="CalendarEvent.ReminderEmail" type="email" class="form-control" />
+        </div>
+    </div>
 
-            document.getElementById("reminderCheckbox").addEventListener("change", updateReminderFields);
-
-            // Initial call
-            updateReminderFields();
-        </script>
-    }
-
-
-
-
-
-
-    <button class="btn-green" type="submit">Speichern</button>
+    <div class="form-group button-group">
+        <button type="submit" class="btn btn-success">Speichern</button>
+        <a asp-page="./Index" class="btn btn-secondary">Abbrechen</a>
+    </div>
 </form>
+
+@section Scripts {
+    <script>
+        // Zeige oder verstecke den Reminder Settings Block beim Umschalten
+        const reminderToggle = document.getElementById('reminderToggle');
+        const reminderSettings = document.getElementById('reminderSettings');
+
+        function toggleReminderSettings() {
+            if (reminderToggle.checked) {
+                reminderSettings.classList.remove('hidden');
+            } else {
+                reminderSettings.classList.add('hidden');
+            }
+        }
+
+        // Initial ausführen
+        toggleReminderSettings();
+
+        // Event Listener
+        reminderToggle.addEventListener('change', toggleReminderSettings);
+    </script>
+}
