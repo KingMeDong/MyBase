@@ -4,6 +4,29 @@
     ViewData["Title"] = "Smarthome";
 }
 
-<h2 class="page-title">🏠 Smarthome</h2>
+<h2>🏠 Smarthome</h2>
 
-<p>Willkommen im Smarthome-Dashboard. Hier kannst du später deine Geräte und Sensoren steuern.</p>
+<div class="system-status-card">
+    <h3>⚙️ Admin Adapter Status</h3>
+    <p>Aktiv: <strong>@(Model.AdminAlive ?? "-")</strong></p>
+</div>
+
+<div class="system-status-card">
+    <h3>🧠 Freier RAM (Raspberry Pi)</h3>
+    <p><strong>@(Model.FreeMem ?? "-") MB</strong></p>
+</div>
+
+
+<div class="system-status-card">
+    <h3>💡 Demo Switch (Platzhalter)</h3>
+
+    <p>Aktueller Status: <strong>@(Model.DemoSwitchState ?? "-")</strong></p>
+
+    <form method="post" asp-page-handler="ToggleDemoSwitch">
+        @if (Model.DemoSwitchState == "true") {
+            <button class="btn-green" type="submit">🔌 Ausschalten</button>
+        } else {
+            <button class="btn-green" type="submit">🔆 Einschalten</button>
+        }
+    </form>
+</div>

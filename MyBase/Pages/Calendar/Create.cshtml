@@ -1,0 +1,34 @@
+﻿@page
+@model MyBase.Pages.Calendar.CreateModel
+@{
+    ViewData["Title"] = "Neuer Termin";
+}
+
+<h2>➕ Neuer Termin</h2>
+
+<form method="post">
+    <div>
+        <label>Titel</label>
+        <input asp-for="Event.Title" />
+        <span asp-validation-for="Event.Title"></span>
+    </div>
+
+    <div>
+        <label>Beschreibung</label>
+        <textarea asp-for="Event.Description"></textarea>
+    </div>
+
+    <div>
+        <label>Start</label>
+        <input type="datetime-local" asp-for="Event.StartDateTime" />
+        <span asp-validation-for="Event.StartDateTime"></span>
+    </div>
+
+    <div>
+        <label>Ende</label>
+        <input type="datetime-local" asp-for="Event.EndDateTime" />
+        <span asp-validation-for="Event.EndDateTime"></span>
+    </div>
+
+    <button class="btn-green" type="submit">Speichern</button>
+</form>

@@ -1,0 +1,35 @@
+﻿@page
+@model MyBase.Pages.Calendar.IndexModel
+@{
+    ViewData["Title"] = "Kalender";
+}
+
+<h2>📅 Kalender</h2>
+
+<p>
+    <a class="btn-green" href="/Calendar/Create">➕ Termin hinzufügen</a>
+</p>
+
+@if (Model.Events.Any()) {
+    <ul class="calendar-event-list">
+        @foreach (var evt in Model.Events) {
+            <li>
+                <strong>@evt.Title</strong><br />
+                🕒 @evt.StartDateTime.ToString("g") - @evt.EndDateTime.ToString("g")<br />
+                📍 @evt.Location<br />
+                @if (!string.IsNullOrWhiteSpace(evt.Description)) {
+                    <div>@evt.Description</div>
+                }
+
+                <div style="margin-top: 0.5rem;">
+                    <a class="btn-green" href="/Calendar/Details?id=@evt.Id">📋 Details / Bearbeiten</a>
+                    <form method="post" asp-page-handler="Delete" asp-route-id="@evt.Id" style="display:inline;">
+                        <button class="btn-red" type="submit">🗑️ Löschen</button>
+                    </form>
+                </div>
+            </li>
+        }
+    </ul>
+} else {
+    <p>Keine Termine vorhanden.</p>
+}

@@ -1,0 +1,87 @@
+﻿@page
+@model MyBase.Pages.Calendar.DetailsModel
+@{
+    ViewData["Title"] = "Termin Details / Bearbeiten";
+}
+
+<h2>📋 Termin Details / Bearbeiten</h2>
+
+<form method="post">
+    <input type="hidden" asp-for="Event.Id" />
+
+    <div>
+        <label>Titel</label>
+        <input asp-for="Event.Title" />
+        <span asp-validation-for="Event.Title"></span>
+    </div>
+
+    <div>
+        <label>Ort</label>
+        <input asp-for="Event.Location" />
+    </div>
+
+    <div>
+        <label>Beschreibung</label>
+        <textarea asp-for="Event.Description"></textarea>
+    </div>
+
+    <div>
+        <label>Start</label>
+        <input type="datetime-local" asp-for="Event.StartDateTime" />
+        <span asp-validation-for="Event.StartDateTime"></span>
+    </div>
+
+    <div>
+        <label>Ende</label>
+        <input type="datetime-local" asp-for="Event.EndDateTime" />
+        <span asp-validation-for="Event.EndDateTime"></span>
+    </div>
+
+    
+
+    <div>
+        <label>
+            <input type="checkbox" asp-for="Event.IsReminderEnabled" id="reminderCheckbox" />
+            E-Mail Reminder aktivieren
+        </label>
+    </div>
+
+    <div id="reminderFields" style="margin-top: 1rem;">
+        <div>
+            <label>Erinnerung (Minuten vor Termin)</label>
+            <input type="number" asp-for="Event.ReminderMinutesBefore" min="1" max="10080" placeholder="z.B. 60 für 1h vorher" />
+        </div>
+
+        <div>
+            <label>E-Mail für Erinnerung</label>
+            <input type="email" asp-for="Event.ReminderEmailAddress" placeholder="z.B. user@example.com" />
+        </div>
+    </div>
+
+    @section Scripts {
+        <script>
+            function updateReminderFields() {
+                var checkbox = document.getElementById("reminderCheckbox");
+                var fields = document.getElementById("reminderFields");
+
+                if (checkbox.checked) {
+                    fields.style.display = "block";
+                } else {
+                    fields.style.display = "none";
+                }
+            }
+
+            document.getElementById("reminderCheckbox").addEventListener("change", updateReminderFields);
+
+            // Initial call
+            updateReminderFields();
+        </script>
+    }
+
+
+
+
+
+
+    <button class="btn-green" type="submit">Speichern</button>
+</form>

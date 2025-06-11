@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using MyBase.Data; // hinzufügen
+using MyBase.Data;
+using MyBase.Models;
+using MyBase.Services; // hinzufügen
 var builder = WebApplication.CreateBuilder(args);
 
 
@@ -15,10 +17,14 @@ builder.Services.AddSession();
 // DbContext registrieren
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
+
+builder.Services.AddHostedService<ReminderService>();
 
 builder.Services.AddControllers();
 
 
+builder.Services.AddHttpClient<MyBase.Clients.IoBrokerClient>();
 
 
 
