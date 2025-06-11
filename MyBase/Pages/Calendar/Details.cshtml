@@ -4,80 +4,139 @@
     ViewData["Title"] = "Termin Details / Bearbeiten";
 }
 
-<h2 class="page-title">🗒️ Termin Details / Bearbeiten</h2>
+<h2>📅 Termin Details / Bearbeiten</h2>
 
 <form method="post" class="form-container">
     <div class="form-group">
-        <label asp-for="CalendarEvent.Title"></label>
-        <input asp-for="CalendarEvent.Title" class="form-control" />
+        <label asp-for="Event.Title">Titel</label>
+        <input asp-for="Event.Title" class="form-control" />
+        <span asp-validation-for="Event.Title" class="text-danger"></span>
     </div>
 
     <div class="form-group">
-        <label asp-for="CalendarEvent.Location"></label>
-        <input asp-for="CalendarEvent.Location" class="form-control" />
+        <label asp-for="Event.Location">Ort</label>
+        <input asp-for="Event.Location" class="form-control" />
     </div>
 
     <div class="form-group">
-        <label asp-for="CalendarEvent.Description"></label>
-        <textarea asp-for="CalendarEvent.Description" class="form-control"></textarea>
+        <label asp-for="Event.Description">Beschreibung</label>
+        <textarea asp-for="Event.Description" class="form-control"></textarea>
     </div>
 
-  <div class="form-group form-group-datetime">
-    <div class="form-group-inline">
-        <label asp-for="CalendarEvent.StartDateTime"></label>
-        <input asp-for="CalendarEvent.StartDateTime" type="datetime-local" class="form-control" asp-format="{0:yyyy-MM-ddTHH:mm}" />
+    <div class="form-group date-group">
+        <div>
+            <label asp-for="Event.StartDateTime">Start</label>
+            <input asp-for="Event.StartDateTime" type="datetime-local" class="form-control" />
+            <span asp-validation-for="Event.StartDateTime" class="text-danger"></span>
+        </div>
+
+        <div>
+            <label asp-for="Event.EndDateTime">Ende</label>
+            <input asp-for="Event.EndDateTime" type="datetime-local" class="form-control" />
+            <span asp-validation-for="Event.EndDateTime" class="text-danger"></span>
+        </div>
     </div>
 
-    <div class="form-group-inline">
-        <label asp-for="CalendarEvent.EndDateTime"></label>
-        <input asp-for="CalendarEvent.EndDateTime" type="datetime-local" class="form-control" asp-format="{0:yyyy-MM-ddTHH:mm}" />
+    <div class="form-group">
+    <div class="checkbox-group">
+        <input asp-for="Event.IsReminderEnabled" type="checkbox" id="IsReminderEnabled" />
+        <label for="IsReminderEnabled"> E-Mail Reminder aktivieren</label>
     </div>
 </div>
 
-    <div class="form-group">
-        <div class="form-check">
-            <input asp-for="CalendarEvent.ReminderEnabled" class="form-check-input" type="checkbox" id="reminderToggle" />
-            <label class="form-check-label" for="reminderToggle">📧 E-Mail Reminder aktivieren</label>
-        </div>
+    <div class="form-group" id="reminderFields" style="display: @(Model.Event.IsReminderEnabled ? "block" : "none")">
+        <label asp-for="Event.ReminderMinutesBefore">Erinnerung (Minuten vor Termin)</label>
+        <input asp-for="Event.ReminderMinutesBefore" class="form-control" type="number" min="1" max="1440" />
+
+        <label asp-for="Event.ReminderEmailAddress">E-Mail für Erinnerung</label>
+        <input asp-for="Event.ReminderEmailAddress" class="form-control" type="email" />
     </div>
 
-    <!-- Reminder Settings block -->
-    <div id="reminderSettings" class="reminder-settings @(Model.CalendarEvent.ReminderEnabled ? "" : "hidden")">
-        <div class="form-group">
-            <label asp-for="CalendarEvent.ReminderMinutesBefore"></label>
-            <input asp-for="CalendarEvent.ReminderMinutesBefore" type="number" min="1" class="form-control" />
-        </div>
-
-        <div class="form-group">
-            <label asp-for="CalendarEvent.ReminderEmail"></label>
-            <input asp-for="CalendarEvent.ReminderEmail" type="email" class="form-control" />
-        </div>
-    </div>
-
-    <div class="form-group button-group">
+    <div class="form-actions">
         <button type="submit" class="btn btn-success">Speichern</button>
-        <a asp-page="./Index" class="btn btn-secondary">Abbrechen</a>
+        <a asp-page="Index" class="btn btn-secondary">Abbrechen</a>
     </div>
 </form>
 
 @section Scripts {
     <script>
-        // Zeige oder verstecke den Reminder Settings Block beim Umschalten
-        const reminderToggle = document.getElementById('reminderToggle');
-        const reminderSettings = document.getElementById('reminderSettings');
+        const reminderCheckbox = document.querySelector('input[name="Event.IsReminderEnabled"]');
+        const reminderFields = document.getElementById('reminderFields');
 
-        function toggleReminderSettings() {
-            if (reminderToggle.checked) {
-                reminderSettings.classList.remove('hidden');
+        reminderCheckbox.addEventListener('change', function () {
+            if (this.checked) {
+                reminderFields.style.display = 'block';
             } else {
-                reminderSettings.classList.add('hidden');
+                reminderFields.style.display = 'none';
             }
-        }
-
-        // Initial ausführen
-        toggleReminderSettings();
-
-        // Event Listener
-        reminderToggle.addEventListener('change', toggleReminderSettings);
+        });
     </script>
 }
+
+<style>
+    .form-container {
+        max-width: 600px;
+        margin: auto;
+        padding: 1.5rem;
+        background-color: #161b22;
+        border-radius: 8px;
+        box-shadow: 0 0 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .date-group {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .date-group > div {
+        flex: 1 1 200px;
+    }
+
+    .form-actions {
+        margin-top: 1rem;
+        display: flex;
+        gap: 1rem;
+    }
+
+    .btn {
+        padding: 0.5rem 1rem;
+        font-weight: bold;
+    }
+
+    .btn-success {
+        background-color: #238636;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .btn-success:hover {
+        background-color: #2ea043;
+    }
+
+    .btn-secondary {
+        background-color: #444c56;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+    }
+
+    .btn-secondary:hover {
+        background-color: #586069;
+    }
+    .checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+</style>
