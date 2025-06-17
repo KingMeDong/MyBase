@@ -4,6 +4,8 @@ using MyBase.Models;
 using MyBase.Services; // hinzufügen
 var builder = WebApplication.CreateBuilder(args);
 
+FileHelper.Initialize(builder.Configuration);
+
 
 builder.Configuration
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)

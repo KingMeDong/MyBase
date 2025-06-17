@@ -669,4 +669,48 @@ form textarea {
     }
 
 /* Kalender Details Styles */
+/*Mediamanager*/
+.media-file-card {
+    background-color: #1c1f26;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+}
 
+.media-file-info {
+    font-size: 0.95rem;
+    color: #ccc;
+    flex: 1;
+}
+
+.media-file-actions {
+    margin-top: 8px;
+}
+
+@media (min-width: 600px) {
+    .media-file-card {
+        flex-wrap: nowrap;
+    }
+
+    .media-file-actions {
+        margin-top: 0;
+        margin-left: 20px;
+    }
+}
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 5px;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+}
+
+    .btn-danger:hover {
+        background-color: #c82333;
+    }
