@@ -1,48 +1,32 @@
 ﻿using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using MyBase.Clients;
+using MyBase.Models;
+using MyBase.Data;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace MyBase.Pages.SmartHome {
     public class IndexModel : PageModel {
         private readonly IoBrokerClient _ioBrokerClient;
+        private readonly AppDbContext _context;
 
-        public IndexModel(IoBrokerClient ioBrokerClient) {
+        public IndexModel(AppDbContext context, IoBrokerClient ioBrokerClient) {
+            _context = context;
             _ioBrokerClient = ioBrokerClient;
         }
 
         public string? AdminAlive { get; set; }
         public string? FreeMem { get; set; }
 
-        // 🆕 Schaltbarer State → Platzhalter für späteres echtes Gerät
-        public string? DemoSwitchState { get; set; }
-
-        // StateId für die Schaltbare Card → später einfach anpassen!
-        private const string DemoSwitchStateId = "system.adapter.admin.0.alive";
+        public List<SmartDevice> Devices { get; set; } = new();
 
         public async Task OnGetAsync() {
-            // Admin Adapter alive
             AdminAlive = await _ioBrokerClient.GetStateAsync("system.adapter.admin.0.alive");
-
-            // Freier RAM in MB
             FreeMem = await _ioBrokerClient.GetStateAsync("system.host.raspberrypi.freemem");
 
-            // 🆕 Schaltbarer State holen
-            DemoSwitchState = await _ioBrokerClient.GetStateAsync(DemoSwitchStateId);
-        }
-
-        // 🆕 POST-Handler → Toggle Button gedrückt
-        public async Task<IActionResult> OnPostToggleDemoSwitchAsync() {
-            var currentState = await _ioBrokerClient.GetStateAsync(DemoSwitchStateId);
-
-            // Toggle Logik
-            bool newState = currentState?.ToLower() != "true";
-
-            // Setzen
-            await _ioBrokerClient.SetStateAsync(DemoSwitchStateId, newState);
-
-            // Redirect → Seite neu laden (damit OnGetAsync wieder ausgeführt wird)
-            return RedirectToPage();
+            Devices = await _context.SmartDevices.ToListAsync();
         }
     }
 }

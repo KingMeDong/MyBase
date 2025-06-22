@@ -1,0 +1,34 @@
+﻿@page
+@model MyBase.Pages.SmartHome.Devices.IndexModel
+@{
+    ViewData["Title"] = "Geräteübersicht";
+    Layout = "_Layout";
+}
+
+<div class="device-index-page">
+    <h2>🧠 Smarthome Geräte</h2>
+
+    <a asp-page="./Create" class="btn btn-green mb-3">➕ Gerät hinzufügen</a>
+
+    @if (Model.Devices.Any()) {
+        <div class="device-card-grid">
+            @foreach (var device in Model.Devices) {
+                <div class="device-card">
+                    <div class="device-header">
+                        <h4>@device.Name</h4>
+                        <span class="badge">@device.Type</span>
+                    </div>
+                    <p><strong>Typ:</strong> @device.ControlType</p>
+                    <p><strong>Endpoint:</strong><br /><code>@device.Endpoint</code></p>
+                    <p class="device-description">@device.Description</p>
+
+                    <div class="device-controls">
+                        <a asp-page="./Edit" asp-route-id="@device.Id" class="btn btn-secondary">✏️ Bearbeiten</a>
+                    </div>
+                </div>
+            }
+        </div>
+    } else {
+        <p>Es wurden noch keine Geräte hinzugefügt.</p>
+    }
+</div>

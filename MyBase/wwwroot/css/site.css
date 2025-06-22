@@ -1064,11 +1064,42 @@ form textarea {
         .smarthome-page .btn-green:hover {
             background-color: #2ea043;
         }
+.smarthome-device-card {
+    background-color: #161b22;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 0 6px rgba(0, 0, 0, 0.3);
+    margin-bottom: 1rem;
+    max-width: 280px;
+}
+
+.device-title {
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+
+.device-nav-buttons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+.smarthome-top-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    justify-content:center;
+}
+
+.smarthome-top-grid .smarthome-device-card {
+    flex: 1 1 300px;
+}
 
 
 /* ========== DEVICE CREATE PAGE ========== */
 
-/* ========== DEVICE CREATE PAGE ========== */
 
 .device-create-page .card {
     background-color: #161b22;
@@ -1177,4 +1208,44 @@ form textarea {
         .device-create-page .button-row button {
             width: 100%;
         }
+}
+/* ========== DEVICE INDEX PAGE ========== */
+.device-index-page {
+    padding: 1rem;
+}
+
+.device-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem;
+}
+
+.device-card {
+    background-color: #161b22;
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 0 8px rgba(0,0,0,0.3);
+}
+
+.device-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.device-card .badge {
+    background-color: #30363d;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    color: #c9d1d9;
+}
+
+.device-description {
+    color: #999;
+    font-size: 0.9rem;
+}
+
+.device-controls {
+    margin-top: 1rem;
 }
