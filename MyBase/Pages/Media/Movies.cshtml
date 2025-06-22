@@ -4,52 +4,51 @@
     ViewData["Title"] = "Filme";
 }
 
-<h2 class="page-title">🎬 Filme</h2>
-
-<p>
-    Aktueller Pfad:
-    <strong>@(string.IsNullOrEmpty(Model.RelativePath) ? "/" : Model.RelativePath)</strong>
-</p>
-
-
-@{
-    var rootPath = $"{Model.CurrentPath.Substring(0, 2)}\\Filme";
-}
-@if (Model.CurrentPath != Model.RootPath) {
-    // Backlink (1 Ordner zurück)
-    var parentPath = System.IO.Path.GetDirectoryName(Model.CurrentPath);
+<main class="media-movies-page">
+    <h2 class="page-title">🎬 Filme</h2>
 
     <p>
-        <a class="btn-gray" href="/Media/Movies?path=@Model.GetEncodedPath(parentPath)">⬅️ Zurück</a>
+        Aktueller Pfad:
+        <strong>@(string.IsNullOrEmpty(Model.RelativePath) ? "/" : Model.RelativePath)</strong>
     </p>
-}
 
-@if (Model.SubDirectories.Any()) {
-    <h3>Ordner:</h3>
-    <ul class="media-folder-list">
-        @foreach (var dir in Model.SubDirectories) {
-            <li class="media-folder-item">
-                <a href="/Media/Movies?path=@Model.GetEncodedPath(dir.FullName)" class="media-folder-button">
-                     @dir.Name
-                </a>
+    @{
+        var rootPath = $"{Model.CurrentPath.Substring(0, 2)}\\Filme";
+    }
+    @if (Model.CurrentPath != Model.RootPath) {
+        var parentPath = System.IO.Path.GetDirectoryName(Model.CurrentPath);
+        <p>
+            <a class="btn-gray" href="/Media/Movies?path=@Model.GetEncodedPath(parentPath)">⬅️ Zurück</a>
+        </p>
+    }
+
+    @if (Model.SubDirectories.Any()) {
+        <h3>Ordner:</h3>
+        <ul class="media-folder-list">
+            @foreach (var dir in Model.SubDirectories) {
+                <li class="media-folder-item">
+                    <a href="/Media/Movies?path=@Model.GetEncodedPath(dir.FullName)" class="media-folder-button">
+                        @dir.Name
+                    </a>
+                </li>
+            }
+        </ul>
+    }
+
+    @if (Model.VideoFiles.Any()) {
+        <h3>Videos:</h3>
+        <ul class="media-video-list">
+            @foreach (var file in Model.VideoFiles) {
+                <li class="media-video-item">
+                    <a href="/Media/Play?path=@Model.GetEncodedPath(file.FullName)" class="media-video-button">
+                        <span>🎞️ @file.Name</span>
+                        <span class="media-video-size">(@(file.Length / 1024 / 1024) MB)</span>
+                    </a>
+
             </li>
         }
     </ul>
-
-}
-
-@if (Model.VideoFiles.Any()) {
-    <h3>Videos:</h3>
-    <ul class="media-video-list">
-        @foreach (var file in Model.VideoFiles) {
-            <li class="media-video-item">
-                <a href="/Media/Play?path=@Model.GetEncodedPath(file.FullName)" class="media-video-button">
-                    🎞️ @file.Name
-                    <span class="media-video-size">(@(file.Length / 1024 / 1024) MB)</span>
-                </a>
-            </li>
-        }
-    </ul>
-} else if (!Model.SubDirectories.Any()) {
-    <p>Keine Videos in diesem Ordner gefunden.</p>
-}
+    } else if (!Model.SubDirectories.Any()) {
+        <p>Keine Videos in diesem Ordner gefunden.</p>
+    }
+</main>

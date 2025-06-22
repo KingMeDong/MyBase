@@ -4,31 +4,35 @@
     ViewData["Title"] = "Neuer Termin";
 }
 
-<h2>➕ Neuer Termin</h2>
+<main class="calendar-create-page">
+    <h2>➕ Neuer Termin</h2>
 
-<form method="post">
-    <div>
-        <label>Titel</label>
-        <input asp-for="Event.Title" />
-        <span asp-validation-for="Event.Title"></span>
-    </div>
+    <form method="post" class="form-container">
+        <div class="form-group">
+            <label>Titel</label>
+            <input asp-for="Event.Title" class="form-control" />
+            <span asp-validation-for="Event.Title" class="text-danger"></span>
+        </div>
 
-    <div>
-        <label>Beschreibung</label>
-        <textarea asp-for="Event.Description"></textarea>
-    </div>
+        <div class="form-group">
+            <label>Beschreibung</label>
+            <textarea asp-for="Event.Description" class="form-control"></textarea>
+        </div>
 
-    <div>
-        <label>Start</label>
-        <input type="datetime-local" asp-for="Event.StartDateTime" />
-        <span asp-validation-for="Event.StartDateTime"></span>
-    </div>
+        <div class="form-group">
+            <label>Start</label>
+            <input type="datetime-local" asp-for="Event.StartDateTime" class="form-control" />
+            <span asp-validation-for="Event.StartDateTime" class="text-danger"></span>
+        </div>
 
-    <div>
-        <label>Ende</label>
-        <input type="datetime-local" asp-for="Event.EndDateTime" />
-        <span asp-validation-for="Event.EndDateTime"></span>
-    </div>
+        <div class="form-group">
+            <label>Ende</label>
+            <input type="datetime-local" asp-for="Event.EndDateTime" class="form-control" />
+            <span asp-validation-for="Event.EndDateTime" class="text-danger"></span>
+        </div>
 
-    <button class="btn-green" type="submit">Speichern</button>
-</form>
+        <div class="form-actions">
+            <button class="btn-green" type="submit">Speichern</button>
+        </div>
+    </form>
+</main>

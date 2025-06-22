@@ -9,6 +9,8 @@ namespace MyBase.Data {
         public DbSet<User> Users { get; set; }
         public DbSet<MyBase.Models.PasswordEntry> Passwords { get; set; }
         public DbSet<CalendarEvent> CalendarEvents { get; set; }
+        public DbSet<SmartDevice> SmartDevices { get; set; }
+
 
     }
 }

@@ -9,82 +9,6 @@ body {
     padding: 0;
 }
 
-
-/* Login Box */
-
-
-
-.login-container {
-    background-color: #161b22; /* GitHub Dark Card Background */
-    padding: 2rem;
-    border-radius: 0.5rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-    width: 90%;
-    max-width: 400px;
-}
-
-    .login-container h2 {
-        text-align: center;
-        margin-bottom: 1.5rem;
-    }
-
-    .login-container form div {
-        margin-bottom: 1rem;
-    }
-
-    .login-container label {
-        display: block;
-        margin-bottom: 0.5rem;
-        font-weight: bold;
-    }
-
-    .login-container input[type="text"],
-    .login-container input[type="password"] {
-        width: 100%;
-        padding: 0.5rem;
-        border: none;
-        border-radius: 0.25rem;
-        background-color: #0d1117;
-        color: #c9d1d9;
-        border: 1px solid #30363d;
-    }
-
-    .login-container button {
-        width: 100%;
-        padding: 0.75rem;
-        background-color: #238636; /* GitHub green */
-        color: white;
-        font-weight: bold;
-        border: none;
-        border-radius: 0.25rem;
-        cursor: pointer;
-        transition: background-color 0.2s ease-in-out;
-    }
-
-        .login-container button:hover {
-            background-color: #2ea043;
-        }
-
-    .login-container .error {
-        color: #f85149;
-        text-align: center;
-    }
-
-/* Login Page Wrapper */
-.login-page {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    min-height: 70vh;
-    padding: 2rem 1rem;
-    box-sizing: border-box;
-}
-@media (max-width: 768px) {
-    .login-page {
-        padding: 4rem 1rem; /* mehr Abstand oben/unten auf Mobile */
-    }
-}
 /* Navbar */
 .navbar {
     display: flex;
@@ -269,124 +193,7 @@ footer {
 
 
 
-/* Passwortmanager Page - Card Look */
 
-.passwordmanager-actions {
-    margin-bottom: 1rem;
-}
-
-.password-card-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1rem;
-    margin-top: 1rem;
-}
-
-.password-card {
-    background-color: #161b22;
-    border: 1px solid #30363d;
-    border-radius: 0.5rem;
-    padding: 1rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    transition: transform 0.2s ease-in-out;
-}
-
-    .password-card:hover {
-        transform: translateY(-4px);
-    }
-
-.password-card-header {
-    font-size: 1.2rem;
-    font-weight: bold;
-    margin-bottom: 0.5rem;
-    color: #f0f6fc;
-}
-
-.password-card-body p {
-    margin: 0.25rem 0;
-}
-
-.password-card-body a {
-    color: #58a6ff;
-    text-decoration: none;
-}
-
-    .password-card-body a:hover {
-        text-decoration: underline;
-    }
-
-.password-card-actions {
-    margin-top: 1rem;
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-}
-
-/* Responsive Optimierung: Cards umbrechen schön */
-@media (max-width: 600px) {
-    .password-card-container {
-        grid-template-columns: 1fr;
-    }
-}
-
-
-
-.add-password-btn {
-    display: inline-block;
-    background-color: #238636;
-    color: #ffffff;
-    font-weight: bold;
-    padding: 0.6rem 1.2rem;
-    border-radius: 0.4rem;
-    text-decoration: none;
-    transition: background-color 0.2s ease-in-out;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
-}
-
-    .add-password-btn:hover {
-        background-color: #2ea043;
-        text-decoration: none;
-        color: #ffffff;
-    }
-
-
-
-
-.password-form {
-    max-width: 600px;
-    background-color: #161b22;
-    border: 1px solid #30363d;
-    padding: 1.5rem;
-    border-radius: 0.5rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-}
-
-    .password-form div {
-        margin-bottom: 1rem;
-    }
-
-    .password-form label {
-        display: block;
-        margin-bottom: 0.3rem;
-        font-weight: bold;
-        color: #c9d1d9;
-    }
-
-    .password-form input,
-    .password-form textarea {
-        width: 100%;
-        padding: 0.5rem;
-        background-color: #0d1117;
-        border: 1px solid #30363d;
-        color: #c9d1d9;
-        border-radius: 0.25rem;
-    }
-textarea {
-    resize: vertical;
-}
 
 /* Button Styles */
 .btn-green {
@@ -429,31 +236,6 @@ textarea {
     margin-top: 1.5rem;
 }
 
-.media-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    margin-top: 1rem;
-}
-
-.media-card {
-    background-color: #161b22;
-    border: 1px solid #30363d;
-    border-radius: 0.5rem;
-    padding: 2rem;
-    font-size: 1.5rem;
-    font-weight: bold;
-    text-align: center;
-    color: #f0f6fc;
-    text-decoration: none;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-    transition: transform 0.2s ease-in-out;
-}
-
-    .media-card:hover {
-        transform: translateY(-4px);
-        background-color: #21262d;
-    }
 
 
 .media-file-list {
@@ -496,78 +278,6 @@ textarea {
     }
 
 
-
-.media-video-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.media-video-item {
-    margin-bottom: 0.75rem;
-}
-
-.media-video-button {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
-    background-color: #21262d;
-    border-radius: 0.5rem;
-    color: #c9d1d9;
-    text-decoration: none;
-    font-weight: bold;
-    border: 1px solid #30363d;
-    transition: background-color 0.2s ease-in-out;
-}
-
-    .media-video-button:hover {
-        background-color: #30363d;
-        color: #58a6ff;
-    }
-
-.media-video-size {
-    font-weight: normal;
-    font-size: 0.9rem;
-    color: #8b949e;
-}
-
-.media-folder-list {
-    list-style: none;
-    padding: 0;
-    margin: 0 0 2rem 0;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1rem;
-}
-
-.media-folder-item {
-    display: flex;
-}
-
-.media-folder-button {
-    display: flex;
-    align-items: center;
-    padding: 1rem;
-    background-color: #21262d;
-    border-radius: 0.5rem;
-    color: #c9d1d9;
-    text-decoration: none;
-    font-weight: bold;
-    border: 1px solid #30363d;
-    transition: background-color 0.2s ease-in-out;
-    width: 100%;
-}
-
-    .media-folder-button:hover {
-        background-color: #30363d;
-        color: #58a6ff;
-    }
-
-    .media-folder-button::before {
-        content: "📁 ";
-        margin-right: 0.5rem;
-    }
 
 
 
@@ -621,21 +331,6 @@ textarea {
         margin-bottom: 0.5rem;
     }
 
-
-
-.calendar-event-list {
-    list-style: none;
-    padding: 0;
-}
-
-    .calendar-event-list li {
-        background-color: #161b22;
-        border: 1px solid #30363d;
-        border-radius: 0.5rem;
-        padding: 1rem;
-        margin-bottom: 1rem;
-        word-wrap: break-word;
-    }
 
 form > div {
     margin-bottom: 1rem;
@@ -713,4 +408,542 @@ form textarea {
 
     .btn-danger:hover {
         background-color: #c82333;
+    }
+
+
+
+    /*-----------------------------------------------------------------------------------------------------------------------------------------------*/
+
+/* ========== MEDIA PAGE ========== */
+
+.media-page .media-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.media-page .media-card {
+    background-color: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 0.5rem;
+    padding: 2rem;
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-align: center;
+    color: #f0f6fc;
+    text-decoration: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    transition: transform 0.2s ease-in-out;
+}
+
+    .media-page .media-card:hover {
+        transform: translateY(-4px);
+        background-color: #21262d;
+    }
+
+/* ========== MEDIA MOVIES PAGE ========== */
+
+.media-movies-page .media-folder-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 2rem 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+}
+
+.media-movies-page .media-folder-item {
+    display: flex;
+}
+
+.media-movies-page .media-folder-button {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background-color: #21262d;
+    border-radius: 0.5rem;
+    color: #c9d1d9;
+    text-decoration: none;
+    font-weight: bold;
+    border: 1px solid #30363d;
+    transition: background-color 0.2s ease-in-out;
+    width: 100%;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+    .media-movies-page .media-folder-button:hover {
+        background-color: #30363d;
+        color: #58a6ff;
+    }
+
+    .media-movies-page .media-folder-button::before {
+        content: "📁 ";
+        margin-right: 0.5rem;
+    }
+
+.media-movies-page .media-video-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.media-movies-page .media-video-item {
+    margin-bottom: 0.75rem;
+}
+
+.media-movies-page .media-video-button {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background-color: #21262d;
+    border-radius: 0.5rem;
+    color: #c9d1d9;
+    text-decoration: none;
+    font-weight: bold;
+    border: 1px solid #30363d;
+    transition: background-color 0.2s ease-in-out;
+    width: 100%;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+    .media-movies-page .media-video-button:hover {
+        background-color: #30363d;
+        color: #58a6ff;
+    }
+
+.media-movies-page .media-video-size {
+    font-weight: normal;
+    font-size: 0.9rem;
+    color: #8b949e;
+}
+/* ========== MEDIA PLAY PAGE ========== */
+
+.media-play-page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+    .media-play-page h2 {
+        margin-bottom: 1rem;
+    }
+
+    .media-play-page video {
+        max-width: 100%;
+        border-radius: 0.5rem;
+        margin: 1rem 0;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+
+    .media-play-page p {
+        margin: 1rem 0;
+    }
+
+    .media-play-page .btn-gray {
+        display: inline-block;
+        background-color: #30363d;
+        color: #ffffff;
+        font-weight: bold;
+        padding: 0.6rem 1.2rem;
+        border: none;
+        border-radius: 0.4rem;
+        text-decoration: none;
+        transition: background-color 0.2s ease-in-out;
+        cursor: pointer;
+    }
+
+        .media-play-page .btn-gray:hover {
+            background-color: #484f58;
+        }
+
+/* ========== LOGIN PAGE ========== */
+
+.login-page {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 70vh;
+    padding: 2rem 1rem;
+    box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+    .login-page {
+        padding: 4rem 1rem;
+    }
+}
+
+.login-page .login-container {
+    background-color: #161b22;
+    padding: 2rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    width: 90%;
+    max-width: 400px;
+}
+
+    .login-page .login-container h2 {
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .login-page .login-container form div {
+        margin-bottom: 1rem;
+    }
+
+    .login-page .login-container label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: bold;
+    }
+
+    .login-page .login-container input[type="text"],
+    .login-page .login-container input[type="password"] {
+        width: 100%;
+        padding: 0.5rem;
+        border: none;
+        border-radius: 0.25rem;
+        background-color: #0d1117;
+        color: #c9d1d9;
+        border: 1px solid #30363d;
+    }
+
+    .login-page .login-container button {
+        width: 100%;
+        padding: 0.75rem;
+        background-color: #238636;
+        color: white;
+        font-weight: bold;
+        border: none;
+        border-radius: 0.25rem;
+        cursor: pointer;
+        transition: background-color 0.2s ease-in-out;
+    }
+
+        .login-page .login-container button:hover {
+            background-color: #2ea043;
+        }
+
+    .login-page .login-container .error {
+        color: #f85149;
+        text-align: center;
+    }
+
+/* ========== CALENDAR PAGE ========== */
+
+.calendar-page .calendar-event-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 1rem;
+}
+
+    .calendar-page .calendar-event-list li {
+        background-color: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        word-wrap: break-word;
+    }
+
+    .calendar-page .calendar-event-list strong {
+        color: #f0f6fc;
+        font-size: 1.1rem;
+    }
+
+.calendar-page .btn-green,
+.calendar-page .btn-red {
+    margin-right: 0.5rem;
+    margin-top: 0.5rem;
+    display: inline-block;
+}
+
+
+/* ========== CALENDAR DETAILS PAGE ========== */
+
+.calendar-details-page .form-container {
+    max-width: 600px;
+    margin: auto;
+    padding: 1.5rem;
+    background-color: #161b22;
+    border-radius: 8px;
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.3);
+}
+
+.calendar-details-page .form-group {
+    margin-bottom: 1rem;
+}
+
+.calendar-details-page .date-group {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+    .calendar-details-page .date-group > div {
+        flex: 1 1 20px;
+    }
+
+.calendar-details-page .form-actions {
+    margin-top: 1rem;
+    display: flex;
+    gap: 1rem;
+}
+
+.calendar-details-page .btn {
+    padding: 0.5rem 1rem;
+    font-weight: bold;
+}
+
+.calendar-details-page .btn-success {
+    background-color: #238636;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+    .calendar-details-page .btn-success:hover {
+        background-color: #2ea043;
+    }
+
+.calendar-details-page .btn-secondary {
+    background-color: #444c56;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+}
+
+    .calendar-details-page .btn-secondary:hover {
+        background-color: #586069;
+    }
+
+.calendar-details-page .checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+
+/* ========== CALENDAR CREATE PAGE ========== */
+
+.calendar-create-page .form-container {
+    max-width: 600px;
+    margin: auto;
+    padding: 1.5rem;
+    background-color: #161b22;
+    border-radius: 8px;
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.3);
+}
+
+.calendar-create-page .form-group {
+    margin-bottom: 1rem;
+}
+
+    .calendar-create-page .form-group label {
+        display: block;
+        margin-bottom: 0.3rem;
+        font-weight: bold;
+        color: #c9d1d9;
+    }
+
+.calendar-create-page .form-control {
+    width: 100%;
+    padding: 0.5rem;
+    background-color: #0d1117;
+    border: 1px solid #30363d;
+    color: #c9d1d9;
+    border-radius: 0.25rem;
+}
+
+.calendar-create-page .text-danger {
+    color: #f85149;
+    font-size: 0.9rem;
+}
+
+.calendar-create-page .form-actions {
+    margin-top: 1.5rem;
+}
+
+.calendar-create-page .btn-green {
+    display: inline-block;
+    background-color: #238636;
+    color: #ffffff;
+    font-weight: bold;
+    padding: 0.6rem 1.2rem;
+    border-radius: 0.4rem;
+    text-decoration: none;
+    transition: background-color 0.2s ease-in-out;
+    border: none;
+    cursor: pointer;
+}
+
+    .calendar-create-page .btn-green:hover {
+        background-color: #2ea043;
+    }
+
+/* ========== PASSWORDMANAGER PAGE ========== */
+
+.passwordmanager-page .passwordmanager-actions {
+    margin-bottom: 1rem;
+}
+
+.passwordmanager-page .add-password-btn {
+    display: inline-block;
+    background-color: #238636;
+    color: #ffffff;
+    font-weight: bold;
+    padding: 0.6rem 1.2rem;
+    border-radius: 0.4rem;
+    text-decoration: none;
+    transition: background-color 0.2s ease-in-out;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+    .passwordmanager-page .add-password-btn:hover {
+        background-color: #2ea043;
+        text-decoration: none;
+        color: #ffffff;
+    }
+
+.passwordmanager-page .password-card-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.passwordmanager-page .password-card {
+    background-color: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.2s ease-in-out;
+}
+
+    .passwordmanager-page .password-card:hover {
+        transform: translateY(-4px);
+    }
+
+.passwordmanager-page .password-card-header {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    color: #f0f6fc;
+}
+
+.passwordmanager-page .password-card-body p {
+    margin: 0.25rem 0;
+}
+
+.passwordmanager-page .password-card-body a {
+    color: #58a6ff;
+    text-decoration: none;
+}
+
+    .passwordmanager-page .password-card-body a:hover {
+        text-decoration: underline;
+    }
+
+.passwordmanager-page .password-card-actions {
+    margin-top: 1rem;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 600px) {
+    .passwordmanager-page .password-card-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* ========== PASSWORD CREATE PAGE ========== */
+
+.password-create-page .password-form {
+    max-width: 600px;
+    background-color: #161b22;
+    border: 1px solid #30363d;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    margin: 0 auto;
+}
+
+    .password-create-page .password-form div {
+        margin-bottom: 1rem;
+    }
+
+    .password-create-page .password-form label {
+        display: block;
+        margin-bottom: 0.3rem;
+        font-weight: bold;
+        color: #c9d1d9;
+    }
+
+    .password-create-page .password-form input,
+    .password-create-page .password-form textarea {
+        width: 100%;
+        padding: 0.5rem;
+        background-color: #0d1117;
+        border: 1px solid #30363d;
+        color: #c9d1d9;
+        border-radius: 0.25rem;
+    }
+
+    .password-create-page .password-form textarea {
+        resize: vertical;
+    }
+
+.password-create-page .form-actions {
+    margin-top: 1.5rem;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.password-create-page .btn-green {
+    display: inline-block;
+    background-color: #238636;
+    color: #ffffff;
+    font-weight: bold;
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: 0.4rem;
+    text-decoration: none;
+    transition: background-color 0.2s ease-in-out;
+    cursor: pointer;
+}
+
+    .password-create-page .btn-green:hover {
+        background-color: #2ea043;
+    }
+
+.password-create-page .btn-gray {
+    display: inline-block;
+    background-color: #30363d;
+    color: #ffffff;
+    font-weight: bold;
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: 0.4rem;
+    text-decoration: none;
+    transition: background-color 0.2s ease-in-out;
+    cursor: pointer;
+}
+
+    .password-create-page .btn-gray:hover {
+        background-color: #484f58;
     }

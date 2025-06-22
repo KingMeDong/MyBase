@@ -1,0 +1,72 @@
+﻿@page
+@model MyBase.Pages.SmartHome.Devices.CreateModel
+@{
+    ViewData["Title"] = "Gerät hinzufügen";
+}
+
+<div class="card mt-4">
+    <div class="card-body">
+        <h3 class="card-title">🔌 Gerät hinzufügen</h3>
+
+        <form method="post" class="mt-4">
+            <div class="form-group">
+                <label asp-for="Device.Name" class="form-label">Name</label>
+                <input asp-for="Device.Name" class="form-control" />
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Device.Type" class="form-label">Typ</label>
+                <select asp-for="Device.Type" class="form-control">
+                    <option value="Pico">Pico</option>
+                    <option value="Zigbee">Zigbee</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Device.ControlType" class="form-label">Steuerungstyp</label>
+                <select asp-for="Device.ControlType" class="form-control">
+                    <option value="switch">Schalter</option>
+                    <option value="slider">Regler</option>
+                    <option value="display">Anzeige</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Device.Endpoint" class="form-label">Endpoint</label>
+                <input asp-for="Device.Endpoint" class="form-control" />
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Device.Description" class="form-label">Beschreibung</label>
+                <textarea asp-for="Device.Description" class="form-control" rows="2"></textarea>
+            </div>
+
+            <div class="form-row d-flex gap-3">
+                <div class="form-group flex-fill">
+                    <label asp-for="Device.Min" class="form-label">Min</label>
+                    <input asp-for="Device.Min" class="form-control" />
+                </div>
+
+                <div class="form-group flex-fill">
+                    <label asp-for="Device.Max" class="form-label">Max</label>
+                    <input asp-for="Device.Max" class="form-control" />
+                </div>
+            </div>
+
+            <div class="mt-4 d-flex justify-content-between">
+                <a asp-page="./Index" class="btn btn-secondary">Zurück</a>
+                <button type="submit" class="btn btn-success">💾 Speichern</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<style>
+        .form-row {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+</style>
