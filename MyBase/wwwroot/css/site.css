@@ -238,26 +238,6 @@ footer {
 
 
 
-.media-file-list {
-    list-style: none;
-    padding: 0;
-    margin-top: 1rem;
-}
-
-    .media-file-list li {
-        background-color: #161b22;
-        border: 1px solid #30363d;
-        padding: 0.75rem 1rem;
-        margin-bottom: 0.5rem;
-        border-radius: 0.4rem;
-        color: #c9d1d9;
-        transition: background-color 0.2s ease-in-out;
-    }
-
-        .media-file-list li:hover {
-            background-color: #21262d;
-            cursor: pointer;
-        }
 
 .btn-gray {
     display: inline-block;
@@ -364,52 +344,6 @@ form textarea {
     }
 
 /* Kalender Details Styles */
-/*Mediamanager*/
-.media-file-card {
-    background-color: #1c1f26;
-    border-radius: 6px;
-    padding: 12px;
-    margin-bottom: 15px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-}
-
-.media-file-info {
-    font-size: 0.95rem;
-    color: #ccc;
-    flex: 1;
-}
-
-.media-file-actions {
-    margin-top: 8px;
-}
-
-@media (min-width: 600px) {
-    .media-file-card {
-        flex-wrap: nowrap;
-    }
-
-    .media-file-actions {
-        margin-top: 0;
-        margin-left: 20px;
-    }
-}
-.btn-danger {
-    background-color: #dc3545;
-    color: white;
-    padding: 6px 12px;
-    border-radius: 5px;
-    text-decoration: none;
-    border: none;
-    cursor: pointer;
-}
-
-    .btn-danger:hover {
-        background-color: #c82333;
-    }
-
 
 
     /*-----------------------------------------------------------------------------------------------------------------------------------------------*/
@@ -947,3 +881,300 @@ form textarea {
     .password-create-page .btn-gray:hover {
         background-color: #484f58;
     }
+
+
+
+/* ========== FILES PAGE ========== */
+
+.files-page .form-group {
+    margin-bottom: 1rem;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.files-page input[type="file"] {
+    flex: 1;
+    background-color: #0d1117;
+    color: #c9d1d9;
+    border: 1px solid #30363d;
+    border-radius: 0.25rem;
+    padding: 0.5rem;
+}
+
+.files-page .media-file-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 1rem;
+}
+
+.files-page .media-file-card {
+    background-color: #1c1f26;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    border: 1px solid #30363d;
+}
+
+.files-page .media-file-info {
+    font-size: 0.95rem;
+    color: #ccc;
+    flex: 1;
+}
+
+.files-page .media-file-actions {
+    margin-top: 8px;
+    display: flex;
+    gap: 0.5rem;
+}
+
+@media (min-width: 600px) {
+    .files-page .media-file-card {
+        flex-wrap: nowrap;
+    }
+
+    .files-page .media-file-actions {
+        margin-top: 0;
+        margin-left: 20px;
+    }
+}
+
+.files-page .btn-gray {
+    background-color: #30363d;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 5px;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+}
+
+    .files-page .btn-gray:hover {
+        background-color: #484f58;
+    }
+
+.files-page .btn-danger {
+    background-color: #dc3545;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 5px;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+}
+
+    .files-page .btn-danger:hover {
+        background-color: #c82333;
+    }
+
+/* ========== SETTINGS PAGE ========== */
+
+.settings-page {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+    .settings-page h2 {
+        margin-bottom: 1rem;
+    }
+
+    .settings-page p {
+        margin-bottom: 1.5rem;
+        color: #c9d1d9;
+    }
+
+    .settings-page .settings-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+        .settings-page .settings-list li {
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            font-weight: bold;
+            color: #f0f6fc;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            transition: background-color 0.2s ease-in-out;
+        }
+
+            .settings-page .settings-list li:hover {
+                background-color: #21262d;
+                cursor: pointer;
+            }
+
+
+
+/* ========== SMARTHOME PAGE ========== */
+
+.smarthome-page {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+    .smarthome-page h2 {
+        margin-bottom: 1.5rem;
+    }
+
+    .smarthome-page .system-status-card {
+        background-color: #161b22;
+        padding: 1.5rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        margin-bottom: 2rem;
+        border: 1px solid #30363d;
+    }
+
+        .smarthome-page .system-status-card h3 {
+            display: flex;
+            align-items: center;
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #f0f6fc;
+        }
+
+        .smarthome-page .system-status-card p {
+            margin-bottom: 0.75rem;
+            font-size: 0.95rem;
+        }
+
+    .smarthome-page .btn-green {
+        display: inline-block;
+        background-color: #238636;
+        color: #ffffff;
+        font-weight: bold;
+        padding: 0.6rem 1.2rem;
+        border-radius: 0.4rem;
+        text-decoration: none;
+        transition: background-color 0.2s ease-in-out;
+        border: none;
+        cursor: pointer;
+    }
+
+        .smarthome-page .btn-green:hover {
+            background-color: #2ea043;
+        }
+
+
+/* ========== DEVICE CREATE PAGE ========== */
+
+/* ========== DEVICE CREATE PAGE ========== */
+
+.device-create-page .card {
+    background-color: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    padding: 1rem;
+    margin-top: 2rem;
+}
+
+.device-create-page .card-title {
+    font-size: 1.3rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    color: #f0f6fc;
+}
+
+.device-create-page .form-group {
+    margin-bottom: 1rem;
+}
+
+.device-create-page .form-label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 0.3rem;
+    color: #c9d1d9;
+}
+
+.device-create-page .form-control {
+    width: 100%;
+    padding: 0.5rem;
+    background-color: #0d1117;
+    color: #c9d1d9;
+    border: 1px solid #30363d;
+    border-radius: 0.25rem;
+}
+
+.device-create-page .form-row {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.device-create-page .form-actions {
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.device-create-page .btn-success {
+    background-color: #238636;
+    color: white;
+    border: none;
+    border-radius: 0.4rem;
+    padding: 0.6rem 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+}
+
+    .device-create-page .btn-success:hover {
+        background-color: #2ea043;
+    }
+
+.device-create-page .btn-secondary {
+    background-color: #444c56;
+    color: white;
+    border: none;
+    border-radius: 0.4rem;
+    padding: 0.6rem 1.2rem;
+    font-weight: bold;
+    text-decoration: none;
+    transition: background-color 0.2s ease-in-out;
+}
+
+    .device-create-page .btn-secondary:hover {
+        background-color: #586069;
+    }
+
+
+.device-create-page .button-row {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+    .device-create-page .button-row a,
+    .device-create-page .button-row button {
+        padding: 0.6rem 1.2rem;
+        min-width: 140px;
+        max-width: 100%;
+        flex-grow: 0;
+        flex-shrink: 1;
+    }
+
+@media (max-width: 600px) {
+    .device-create-page .button-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+        .device-create-page .button-row a,
+        .device-create-page .button-row button {
+            width: 100%;
+        }
+}

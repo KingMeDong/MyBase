@@ -7,46 +7,44 @@
     ViewData["Title"] = "Dateiverwaltung";
 }
 
-<h2>📁 Dateiverwaltung</h2>
+<main class="files-page">
+    <h2>📁 Dateiverwaltung</h2>
 
-<form method="post" enctype="multipart/form-data" asp-page-handler="Upload">
-    <div class="form-group">
-        <input type="file" name="UploadedFile" />
-        <button type="submit" class="btn-green">📤 Hochladen</button>
-    </div>
-</form>
+    <form method="post" enctype="multipart/form-data" asp-page-handler="Upload">
+        <div class="form-group">
+            <input type="file" name="UploadedFile" />
+            <button type="submit" class="btn-green">📤 Hochladen</button>
+        </div>
+    </form>
 
-@{
-    var fullFiles = Directory.GetFiles(FileHelper.UploadDirectory).ToList();
+    @{
+        var fullFiles = Directory.GetFiles(FileHelper.UploadDirectory).ToList();
+    }
 
-}
+    @if (fullFiles.Any()) {
+        <h3>🗂️ Hochgeladene Dateien</h3>
+        <ul class="media-file-list">
+            @foreach (var fullPath in fullFiles) {
+                var fileName = System.IO.Path.GetFileName(fullPath);
+                var fileInfo = new FileInfo(fullPath);
+                var fileSizeMB = Math.Round(fileInfo.Length / 1024.0 / 1024.0, 2);
 
-@if (fullFiles.Any()) {
-    <h3>🗂️ Hochgeladene Dateien</h3>
-    <ul class="media-file-list">
-        @foreach (var fullPath in fullFiles) {
-            var fileName = System.IO.Path.GetFileName(fullPath);
-            var fileInfo = new FileInfo(fullPath);
-            var fileSizeMB = Math.Round(fileInfo.Length / 1024.0 / 1024.0, 2);
-
-            <li class="media-file-card">
-                <div class="media-file-info">
-                    <div><strong>📄 @fileName</strong></div>
-                    <div>📁 Pfad: <code>@fullPath</code></div>
-                    <div>📦 Größe: @fileSizeMB MB</div>
-                </div>
-                <div class="media-file-actions">
-                    <a class="btn btn-gray" href="/download/@fileName" download>📥 Download</a>
-                    <form method="post" asp-page-handler="Delete" asp-route-fileName="@fileName" onsubmit="return confirm('Datei wirklich löschen?');">
-                        <button type="submit" class="btn btn-danger">🗑️ Löschen</button>
-                    </form>
-                </div>
-            </li>
-        }
-
-
-    </ul>
-} else {
-    <p>Keine Dateien hochgeladen.</p>
-}
-
+                <li class="media-file-card">
+                    <div class="media-file-info">
+                        <div><strong>📄 @fileName</strong></div>
+                        <div>📁 Pfad: <code>@fullPath</code></div>
+                        <div>📦 Größe: @fileSizeMB MB</div>
+                    </div>
+                    <div class="media-file-actions">
+                        <a class="btn btn-gray" href="/download/@fileName" download>📥 Download</a>
+                        <form method="post" asp-page-handler="Delete" asp-route-fileName="@fileName" onsubmit="return confirm('Datei wirklich löschen?');">
+                            <button type="submit" class="btn btn-danger">🗑️ Löschen</button>
+                        </form>
+                    </div>
+                </li>
+            }
+        </ul>
+    } else {
+        <p>Keine Dateien hochgeladen.</p>
+    }
+</main>
