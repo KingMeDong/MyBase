@@ -7,7 +7,6 @@
 <main class="smarthome-page">
     <h2>🏠 Smarthome</h2>
 
-    <!-- Grid: Systeminfo + Geräteverwaltung -->
     <div class="smarthome-top-grid">
         <div class="smarthome-device-card">
             <h4 class="device-title">📊 Systeminfo</h4>
@@ -19,36 +18,44 @@
             <h4 class="device-title">🛠️ Geräteverwaltung</h4>
             <p>Füge neue Geräte hinzu oder bearbeite bestehende Zigbee- oder Pico-Geräte.</p>
             <div class="device-nav-buttons mt-3">
-                <a href="/SmartHome/Devices" class="btn btn-secondary">📋 Geräteliste</a>
+                <a href="/SmartHome/Devices" class="btn btn-green btn-secondary">📋 Geräteliste</a>
                 <a href="/SmartHome/Devices/Create" class="btn btn-green">➕ Gerät hinzufügen</a>
             </div>
         </div>
     </div>
 
-    <!-- Geräte aus DB anzeigen -->
     @if (Model.Devices.Any()) {
         <div class="device-card-grid">
             @foreach (var device in Model.Devices) {
                 <div class="smarthome-device-card">
                     <h4 class="device-title">@device.Name</h4>
-                    <p class="text-muted">Typ: @device.Type / @device.ControlType</p>
 
-                    @if (device.ControlType == "switch") {
+                    @if (device.Type == "Pico" && device.ControlType == "switch") {
+
+                        var status = Model.PicoStates.ContainsKey(device.Id) ? Model.PicoStates[device.Id] : "unbekannt";
                         <form method="post" asp-page-handler="ToggleDevice" asp-route-id="@device.Id">
-                            <button type="submit" class="btn btn-green">Wechseln</button>
+                            <button type="submit" class="btn btn-green">
+                                @(status == "on" ? "🔌 Ausschalten" : "🔆 Einschalten")
+                            </button>
                         </form>
-                    } else if (device.ControlType == "slider") {
-                        <form method="post" asp-page-handler="SetSlider" asp-route-id="@device.Id">
-                            <input type="range" name="value" min="@device.Min" max="@device.Max" />
-                            <button type="submit" class="btn btn-secondary mt-1">Übernehmen</button>
-                        </form>
-                    } else if (device.ControlType == "display") {
-                        <p><strong>Wert:</strong> (noch nicht implementiert)</p>
                     }
 
-                    <p class="device-endpoint mt-2 text-sm"><code>@device.Endpoint</code></p>
+                    @if (device.Type == "Pico" && device.ControlType == "slider") {
+                        <form method="post" asp-page-handler="SetSlider" asp-route-id="@device.Id">
+                            <input type="range" name="value" min="@device.Min" max="@device.Max" class="smarthome-slider" />
+                            <button type="submit" class="btn btn-secondary mt-2">Übernehmen</button>
+                        </form>
+                    }
+
+                    @if (device.Type == "Pico" && device.ControlType == "rgb") {
+                        <form method="post" asp-page-handler="SetColor" asp-route-id="@device.Id">
+                            <input type="color" name="hexColor" value="#ff0000" class="smarthome-colorpicker" />
+                            <button type="submit" class="btn btn-green mt-2">🎨 Farbe setzen</button>
+                        </form>
+                    }
                 </div>
             }
         </div>
     }
+
 </main>

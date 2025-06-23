@@ -1,15 +1,19 @@
-﻿@page
-@model MyBase.Pages.SmartHome.Devices.CreateModel
+﻿@page "{id:int}"
+@model MyBase.Pages.SmartHome.Devices.EditModel
 @{
-    ViewData["Title"] = "Gerät hinzufügen";
+    ViewData["Title"] = "Gerät bearbeiten";
 }
-
+@* device-create-page - Style von der create page da beide fast identisch sind *@
 <main class="device-create-page">
     <div class="card mt-4">
         <div class="card-body">
-            <h3 class="card-title">🔌 Gerät hinzufügen</h3>
-
+            <h3 class="card-title">✏️ Gerät bearbeiten</h3>
+            <!-- Löschen separat -->
+            <form method="post" asp-page-handler="Delete" asp-route-id="@Model.Device.Id" class="mt-4">
+                <button type="submit" class="btn btn-danger">🗑️ Gerät löschen</button>
+            </form>
             <form method="post" class="mt-4">
+                <input type="hidden" asp-for="Device.Id" />
 
                 <div class="form-group">
                     <label asp-for="Device.Name" class="form-label">Name</label>
@@ -34,7 +38,6 @@
                     <textarea asp-for="Device.Description" class="form-control" rows="2"></textarea>
                 </div>
 
-                <!-- Nur für Zigbee -->
                 <div id="standard-fields">
                     <div class="form-group">
                         <label asp-for="Device.ControlType" class="form-label">Steuerungstyp</label>
@@ -59,7 +62,6 @@
                     </div>
                 </div>
 
-                <!-- Nur für Pico -->
                 <div id="pico-fields" style="display:none;">
                     <div class="form-group">
                         <label asp-for="Device.Code" class="form-label">MicroPython (main.py)</label>
@@ -72,11 +74,13 @@
                     </div>
                 </div>
 
-                <div class="button-row mt-4">
+                <div class="button-row mt-4 d-flex justify-content-between flex-wrap gap-2">
                     <a asp-page="./Index" class="btn btn-secondary">Zurück</a>
-                    <button type="submit" class="btn btn-success">💾 Speichern</button>
+                    <button type="submit" class="btn btn-success">💾 Änderungen speichern</button>
                 </div>
             </form>
+
+           
         </div>
     </div>
 </main>
