@@ -14,6 +14,10 @@ namespace MyBase.Pages.SmartHome {
         private readonly IoBrokerClient _ioBrokerClient;
         private readonly AppDbContext _context;
 
+        public Dictionary<int, List<UiElement>> UiSchemas { get; set; } = new();
+
+
+
         public IndexModel(AppDbContext context, IoBrokerClient ioBrokerClient) {
             _context = context;
             _ioBrokerClient = ioBrokerClient;
@@ -39,6 +43,17 @@ namespace MyBase.Pages.SmartHome {
 
             foreach (var device in allDevices) {
                 bool erreichbar = false;
+
+                if (device.Type == "Pico" && !string.IsNullOrWhiteSpace(device.UiSchema)) {
+                    try {
+                        var parsed = System.Text.Json.JsonSerializer.Deserialize<List<UiElement>>(device.UiSchema);
+                        if (parsed != null) UiSchemas[device.Id] = parsed;
+                    } catch {
+                        UiSchemas[device.Id] = new(); // leere Liste bei Fehler
+                    }
+                }
+
+
 
                 if (device.Type == "Pico") {
                     try {

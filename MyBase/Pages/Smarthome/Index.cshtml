@@ -30,32 +30,59 @@
                 <div class="smarthome-device-card">
                     <h4 class="device-title">@device.Name</h4>
 
-                    @if (device.Type == "Pico" && device.ControlType == "switch") {
+                    @* PICO mit dynamischer UI *@
+                    @if (device.Type == "Pico" && Model.UiSchemas.ContainsKey(device.Id)) {
 
-                        var status = Model.PicoStates.ContainsKey(device.Id) ? Model.PicoStates[device.Id] : "unbekannt";
-                        <form method="post" asp-page-handler="ToggleDevice" asp-route-id="@device.Id">
-                            <button type="submit" class="btn btn-green">
-                                @(status == "on" ? "🔌 Ausschalten" : "🔆 Einschalten")
-                            </button>
-                        </form>
+                        foreach (var el in Model.UiSchemas[device.Id]) {
+
+                            if (el.Type == "button") {
+                                <form method="post" asp-page-handler="TriggerPico" asp-route-id="@device.Id">
+                                    <input type="hidden" name="endpoint" value="@el.Endpoint" />
+                                    <button type="submit" class="btn btn-green btn-sm mt-1">@el.Label</button>
+                                </form>
+                            }
+
+                            if (el.Type == "slider") {
+                                <form method="post" asp-page-handler="SetPicoSlider" asp-route-id="@device.Id">
+                                    <input type="range" name="value" min="@el.Min" max="@el.Max" class="smarthome-slider" />
+                                    <input type="hidden" name="endpoint" value="@el.Endpoint" />
+                                    <button type="submit" class="btn btn-secondary btn-sm mt-1">Übernehmen</button>
+                                </form>
+                            }
+
+                            if (el.Type == "display") {
+                                <p class="text-muted small">@el.Label: <em>(Anzeige folgt)</em></p>
+                            }
+
+                        }
+
                     }
 
-                    @if (device.Type == "Pico" && device.ControlType == "slider") {
-                        <form method="post" asp-page-handler="SetSlider" asp-route-id="@device.Id">
-                            <input type="range" name="value" min="@device.Min" max="@device.Max" class="smarthome-slider" />
-                            <button type="submit" class="btn btn-secondary mt-2">Übernehmen</button>
-                        </form>
+                   @* PICO ohne UiSchema: Hinweis anzeigen *@
+                   else if (device.Type == "Pico") {
+                        <p class="text-danger mt-2">⚠️ Kein gültiges UI-Schema hinterlegt.</p>
                     }
 
-                    @if (device.Type == "Pico" && device.ControlType == "rgb") {
-                        <form method="post" asp-page-handler="SetColor" asp-route-id="@device.Id">
-                            <input type="color" name="hexColor" value="#ff0000" class="smarthome-colorpicker" />
-                            <button type="submit" class="btn btn-green mt-2">🎨 Farbe setzen</button>
-                        </form>
+                   @* ZIGBEE: klassisch über ControlType (Platzhalter) *@
+                   else if (device.Type == "Zigbee") {
+                        @if (device.ControlType == "switch") {
+                            <form method="post" asp-page-handler="ToggleZigbee" asp-route-id="@device.Id">
+                                <button type="submit" class="btn btn-green btn-sm mt-1">Wechseln</button>
+                            </form>
+                        } else if (device.ControlType == "slider") {
+                            <form method="post" asp-page-handler="SetZigbeeSlider" asp-route-id="@device.Id">
+                                <input type="range" name="value" min="@device.Min" max="@device.Max" class="smarthome-slider" />
+                                <button type="submit" class="btn btn-secondary btn-sm mt-1">Übernehmen</button>
+                            </form>
+                        } else if (device.ControlType == "display") {
+                            <p class="text-muted small">Anzeige folgt</p>
+                        } else {
+                            <p class="text-danger">Unbekannter Steuerungstyp.</p>
+                        }
                     }
                 </div>
             }
         </div>
-    }
 
+    }
 </main>
