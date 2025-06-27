@@ -9,6 +9,10 @@ namespace MyBase.Pages.Media {
     public class MoviesModel : PageModel {
         private readonly IConfiguration _configuration;
 
+        [BindProperty(SupportsGet = true)]
+        public string? SearchTerm { get; set; }
+
+
         public MoviesModel(IConfiguration configuration) {
             _configuration = configuration;
         }
@@ -38,9 +42,13 @@ namespace MyBase.Pages.Media {
                     .ToList();
 
                 VideoFiles = dir.GetFiles()
-                    .Where(f => allowedExtensions.Contains(f.Extension.ToLower()))
+                    .Where(f =>
+                        allowedExtensions.Contains(f.Extension.ToLower()) &&
+                        (string.IsNullOrEmpty(SearchTerm) || f.Name.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase))
+                    )
                     .OrderBy(f => f.Name)
                     .ToList();
+
             } else {
                 SubDirectories = new List<DirectoryInfo>();
                 VideoFiles = new List<FileInfo>();

@@ -21,7 +21,10 @@
             <a class="btn-gray" href="/Media/Movies?path=@Model.GetEncodedPath(parentPath)">⬅️ Zurück</a>
         </p>
     }
-
+    <form method="get" class="mb-3">
+        <input type="hidden" name="path" value="@Model.CurrentPath" />
+        <input type="text" name="SearchTerm" value="@Model.SearchTerm" placeholder="🔍 Film suchen..." class="form-control" />
+    </form>
     @if (Model.SubDirectories.Any()) {
         <h3>Ordner:</h3>
         <ul class="media-folder-list">
@@ -37,6 +40,8 @@
 
     @if (Model.VideoFiles.Any()) {
         <h3>Videos:</h3>
+        <p><strong>@Model.VideoFiles.Count</strong> Videos im aktuellen Ordner</p>
+
         <ul class="media-video-list">
             @foreach (var file in Model.VideoFiles) {
                 <li class="media-video-item">
