@@ -30,40 +30,19 @@
                 <div class="smarthome-device-card">
                     <h4 class="device-title">@device.Name</h4>
 
-                    @* PICO mit dynamischer UI *@
-                    @if (device.Type == "Pico" && Model.UiSchemas.ContainsKey(device.Id)) {
-
-                        foreach (var el in Model.UiSchemas[device.Id]) {
-
-                            if (el.Type == "button") {
-                                <form method="post" asp-page-handler="TriggerPico" asp-route-id="@device.Id">
-                                    <input type="hidden" name="endpoint" value="@el.Endpoint" />
-                                    <button type="submit" class="btn btn-green btn-sm mt-1">@el.Label</button>
-                                </form>
-                            }
-
-                            if (el.Type == "slider") {
-                                <form method="post" asp-page-handler="SetPicoSlider" asp-route-id="@device.Id">
-                                    <input type="range" name="value" min="@el.Min" max="@el.Max" class="smarthome-slider" />
-                                    <input type="hidden" name="endpoint" value="@el.Endpoint" />
-                                    <button type="submit" class="btn btn-secondary btn-sm mt-1">Übernehmen</button>
-                                </form>
-                            }
-
-                            if (el.Type == "display") {
-                                <p class="text-muted small">@el.Label: <em>(Anzeige folgt)</em></p>
-                            }
-
-                        }
-
+                    @* PICO: manuell gepflegt *@
+                    @if (device.Type == "Pico") {
+                        <form method="post" asp-page-handler="TriggerPico" asp-route-id="@device.Id">
+                            <input type="hidden" name="endpoint" value="/on" />
+                            <button type="submit" class="btn btn-green btn-sm mt-1">🔆 Einschalten</button>
+                        </form>
+                        <form method="post" asp-page-handler="TriggerPico" asp-route-id="@device.Id">
+                            <input type="hidden" name="endpoint" value="/off" />
+                            <button type="submit" class="btn btn-danger btn-sm mt-1">🔌 Ausschalten</button>
+                        </form>
                     }
 
-                   @* PICO ohne UiSchema: Hinweis anzeigen *@
-                   else if (device.Type == "Pico") {
-                        <p class="text-danger mt-2">⚠️ Kein gültiges UI-Schema hinterlegt.</p>
-                    }
-
-                   @* ZIGBEE: klassisch über ControlType (Platzhalter) *@
+                   @* ZIGBEE: klassisch über ControlType *@
                    else if (device.Type == "Zigbee") {
                         @if (device.ControlType == "switch") {
                             <form method="post" asp-page-handler="ToggleZigbee" asp-route-id="@device.Id">
@@ -83,6 +62,5 @@
                 </div>
             }
         </div>
-
     }
 </main>

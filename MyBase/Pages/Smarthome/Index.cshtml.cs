@@ -14,15 +14,6 @@ namespace MyBase.Pages.SmartHome {
         private readonly IoBrokerClient _ioBrokerClient;
         private readonly AppDbContext _context;
 
-        public Dictionary<int, List<UiElement>> UiSchemas { get; set; } = new();
-
-
-
-        public IndexModel(AppDbContext context, IoBrokerClient ioBrokerClient) {
-            _context = context;
-            _ioBrokerClient = ioBrokerClient;
-        }
-
         public List<SmartDevice> Devices { get; set; } = new();
         public Dictionary<int, string> PicoStates { get; set; } = new();
         public string? AdminAlive { get; set; }
@@ -32,6 +23,13 @@ namespace MyBase.Pages.SmartHome {
         public int Value { get; set; } // für Slider
         [BindProperty]
         public string HexColor { get; set; } = "#000000";
+        [BindProperty]
+        public string Endpoint { get; set; } = "";
+
+        public IndexModel(AppDbContext context, IoBrokerClient ioBrokerClient) {
+            _context = context;
+            _ioBrokerClient = ioBrokerClient;
+        }
 
         public async Task OnGetAsync() {
             AdminAlive = await _ioBrokerClient.GetStateAsync("system.adapter.admin.0.alive");
@@ -43,17 +41,6 @@ namespace MyBase.Pages.SmartHome {
 
             foreach (var device in allDevices) {
                 bool erreichbar = false;
-
-                if (device.Type == "Pico" && !string.IsNullOrWhiteSpace(device.UiSchema)) {
-                    try {
-                        var parsed = System.Text.Json.JsonSerializer.Deserialize<List<UiElement>>(device.UiSchema);
-                        if (parsed != null) UiSchemas[device.Id] = parsed;
-                    } catch {
-                        UiSchemas[device.Id] = new(); // leere Liste bei Fehler
-                    }
-                }
-
-
 
                 if (device.Type == "Pico") {
                     try {
@@ -72,7 +59,6 @@ namespace MyBase.Pages.SmartHome {
                     try {
                         var state = await _ioBrokerClient.GetStateAsync(device.Endpoint);
                         erreichbar = !string.IsNullOrWhiteSpace(state);
-                        // optional: weitere Zustände merken
                     } catch {
                         erreichbar = false;
                     }
@@ -131,5 +117,20 @@ namespace MyBase.Pages.SmartHome {
 
             return RedirectToPage();
         }
+
+        public async Task<IActionResult> OnPostTriggerPicoAsync(int id) {
+            var device = await _context.SmartDevices.FindAsync(id);
+            if (device == null || string.IsNullOrWhiteSpace(Endpoint)) return RedirectToPage();
+
+            if (device.Type == "Pico") {
+                try {
+                    var url = $"{device.Endpoint.TrimEnd('/')}{Endpoint}";
+                    await new HttpClient().GetAsync(url);
+                } catch { }
+            }
+
+            return RedirectToPage();
+        }
     }
+
 }

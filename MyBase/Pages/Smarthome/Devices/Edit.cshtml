@@ -3,15 +3,18 @@
 @{
     ViewData["Title"] = "Gerät bearbeiten";
 }
-@* device-create-page - Style von der create page da beide fast identisch sind *@
+
 <main class="device-create-page">
     <div class="card mt-4">
         <div class="card-body">
             <h3 class="card-title">✏️ Gerät bearbeiten</h3>
-            <!-- Löschen separat -->
+
+            <!-- Gerät löschen -->
             <form method="post" asp-page-handler="Delete" asp-route-id="@Model.Device.Id" class="mt-4">
                 <button type="submit" class="btn btn-danger">🗑️ Gerät löschen</button>
             </form>
+
+            <!-- Gerät bearbeiten -->
             <form method="post" class="mt-4">
                 <input type="hidden" asp-for="Device.Id" />
 
@@ -54,7 +57,6 @@
                             <label asp-for="Device.Min" class="form-label">Min</label>
                             <input asp-for="Device.Min" class="form-control" />
                         </div>
-
                         <div class="form-group flex-fill">
                             <label asp-for="Device.Max" class="form-label">Max</label>
                             <input asp-for="Device.Max" class="form-control" />
@@ -67,11 +69,6 @@
                         <label asp-for="Device.Code" class="form-label">MicroPython (main.py)</label>
                         <textarea asp-for="Device.Code" rows="14" class="form-control" spellcheck="false" style="font-family: monospace;"></textarea>
                     </div>
-
-                    <div class="form-group">
-                        <label asp-for="Device.UiSchema" class="form-label">UI-Schema (JSON)</label>
-                        <textarea asp-for="Device.UiSchema" rows="8" class="form-control" spellcheck="false" style="font-family: monospace;"></textarea>
-                    </div>
                 </div>
 
                 <div class="button-row mt-4 d-flex justify-content-between flex-wrap gap-2">
@@ -80,7 +77,14 @@
                 </div>
             </form>
 
-           
+            <!-- Pico Restart -->
+            @if (Model.Device.Type == "Pico") {
+                <form method="post" asp-page-handler="Restart" asp-route-id="@Model.Device.Id" class="mt-3">
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-warning">🔁 Pico neustarten</button>
+                    </div>
+                </form>
+            }
         </div>
     </div>
 </main>
@@ -89,16 +93,8 @@
     <script>
         function toggleDeviceFields() {
             const type = document.getElementById("device-type").value;
-            const picoFields = document.getElementById("pico-fields");
-            const standardFields = document.getElementById("standard-fields");
-
-            if (type === "Pico") {
-                picoFields.style.display = "block";
-                standardFields.style.display = "none";
-            } else {
-                picoFields.style.display = "none";
-                standardFields.style.display = "block";
-            }
+            document.getElementById("pico-fields").style.display = type === "Pico" ? "block" : "none";
+            document.getElementById("standard-fields").style.display = type === "Pico" ? "none" : "block";
         }
 
         document.addEventListener("DOMContentLoaded", toggleDeviceFields);

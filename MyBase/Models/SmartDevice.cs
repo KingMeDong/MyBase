@@ -1,4 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
+
 
 namespace MyBase.Models {
     public class SmartDevice {
@@ -22,15 +24,6 @@ namespace MyBase.Models {
         public int? Max { get; set; }
 
         public string? Code { get; set; }
-        public string? UiSchema { get; set; } // JSON-basierte UI-Definition für Pico
 
-    }
-
-    public class UiElement {
-        public string Type { get; set; } = "";
-        public string Label { get; set; } = "";
-        public string Endpoint { get; set; } = "";
-        public int? Min { get; set; }
-        public int? Max { get; set; }
     }
 }
