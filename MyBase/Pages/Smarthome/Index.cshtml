@@ -31,22 +31,26 @@
                     <h4 class="device-title">@device.Name</h4>
 
                     @* PICO: manuell gepflegt *@
-                    @if (device.Type == "Pico") {
-                        <form method="post" asp-page-handler="TriggerPico" asp-route-id="@device.Id">
-                            <input type="hidden" name="endpoint" value="/on" />
-                            <button type="submit" class="btn btn-green btn-sm mt-1">🔆 Einschalten</button>
-                        </form>
-                        <form method="post" asp-page-handler="TriggerPico" asp-route-id="@device.Id">
-                            <input type="hidden" name="endpoint" value="/off" />
-                            <button type="submit" class="btn btn-danger btn-sm mt-1">🔌 Ausschalten</button>
+                    @if (device.Type == "Pico" && device.ControlType == "switch") {
+
+                        var status = Model.PicoStates.ContainsKey(device.Id) ? Model.PicoStates[device.Id] : "unbekannt";
+
+                        <form method="post" asp-page-handler="ToggleDevice" asp-route-id="@device.Id">
+                            <button type="submit" class="btn btn-sm mt-1 @(status == "on" ? "btn-danger" : "btn-green")">
+                                @(status == "on" ? "🔌 Ausschalten" : "🔆 Einschalten")
+                            </button>
                         </form>
                     }
 
                    @* ZIGBEE: klassisch über ControlType *@
                    else if (device.Type == "Zigbee") {
                         @if (device.ControlType == "switch") {
+
+                            var zigbeeStatus = Model.ZigbeeStates.ContainsKey(device.Id) ? Model.ZigbeeStates[device.Id] : "unbekannt";
                             <form method="post" asp-page-handler="ToggleZigbee" asp-route-id="@device.Id">
-                                <button type="submit" class="btn btn-green btn-sm mt-1">Wechseln</button>
+                                <button type="submit" class="btn btn-green btn-sm mt-1">
+                                    @(zigbeeStatus == "true" ? "🔌 Ausschalten" : "🔆 Einschalten")
+                                </button>
                             </form>
                         } else if (device.ControlType == "slider") {
                             <form method="post" asp-page-handler="SetZigbeeSlider" asp-route-id="@device.Id">

@@ -16,13 +16,17 @@ namespace MyBase.Pages.SmartHome {
 
         public List<SmartDevice> Devices { get; set; } = new();
         public Dictionary<int, string> PicoStates { get; set; } = new();
+        public Dictionary<int, string> ZigbeeStates { get; set; } = new();
+
         public string? AdminAlive { get; set; }
         public string? FreeMem { get; set; }
 
         [BindProperty]
-        public int Value { get; set; } // für Slider
+        public int Value { get; set; }
+
         [BindProperty]
         public string HexColor { get; set; } = "#000000";
+
         [BindProperty]
         public string Endpoint { get; set; } = "";
 
@@ -58,7 +62,13 @@ namespace MyBase.Pages.SmartHome {
                 } else if (device.Type == "Zigbee") {
                     try {
                         var state = await _ioBrokerClient.GetStateAsync(device.Endpoint);
-                        erreichbar = !string.IsNullOrWhiteSpace(state);
+                        if (state != null) {
+                            erreichbar = true;
+
+                            if (device.ControlType == "switch") {
+                                ZigbeeStates[device.Id] = state.Trim().ToLower();
+                            }
+                        }
                     } catch {
                         erreichbar = false;
                     }
@@ -88,6 +98,25 @@ namespace MyBase.Pages.SmartHome {
 
             return RedirectToPage();
         }
+
+        public async Task<IActionResult> OnPostToggleZigbeeAsync(int id) {
+            var device = await _context.SmartDevices.FindAsync(id);
+            if (device == null || string.IsNullOrWhiteSpace(device.Endpoint)) return RedirectToPage();
+
+            try {
+                var state = await _ioBrokerClient.GetStateAsync(device.Endpoint);
+                var current = state?.Trim().ToLower();
+
+                var newValue = current == "true" ? "false" : "true";
+                await _ioBrokerClient.SetStateAsync(device.Endpoint, newValue);
+            } catch {
+                // Fehler ignorieren oder loggen
+            }
+
+            return RedirectToPage();
+        }
+
+
 
         public async Task<IActionResult> OnPostSetSliderAsync(int id) {
             var device = await _context.SmartDevices.FindAsync(id);
@@ -132,5 +161,4 @@ namespace MyBase.Pages.SmartHome {
             return RedirectToPage();
         }
     }
-
 }

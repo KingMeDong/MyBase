@@ -19,21 +19,20 @@ namespace MyBase.Clients {
             try {
                 var response = await _httpClient.GetAsync(url);
                 response.EnsureSuccessStatusCode();
-
                 var json = await response.Content.ReadAsStringAsync();
 
-                // Beispiel: { "val": true, "ack": true, "ts": 1680000000000, ... }
                 using var doc = JsonDocument.Parse(json);
                 if (doc.RootElement.TryGetProperty("val", out var val)) {
-                    return val.ToString();
+                    return val.ToString(); // ganz bewusst KEINE Umwandlung
                 }
             } catch {
-                // Fehlerbehandlung (könnte man noch schöner machen)
                 return null;
             }
 
             return null;
         }
+
+
 
         // Beispiel: SET Wert eines States
         public async Task<bool> SetStateAsync(string stateId, object value) {

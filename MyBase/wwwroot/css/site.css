@@ -1073,10 +1073,11 @@ form textarea {
     max-width: 280px;
 }
 
-.device-title {
+.smarthome-page .device-title {
     font-size: 1.1rem;
     font-weight: bold;
-    margin-bottom: 0.5rem;
+    margin-bottom: 1.5rem;
+    margin-top: .5rem;
 }
 
 
@@ -1111,6 +1112,22 @@ form textarea {
     background: none;
     padding: 0;
 }
+.smarthome-page .btn-danger {
+    display: inline-block;
+    background-color: #da3633;
+    color: #ffffff;
+    font-weight: bold;
+    padding: 0.6rem 1.2rem;
+    border-radius: 0.4rem;
+    text-decoration: none;
+    transition: background-color 0.2s ease-in-out;
+    border: none;
+    cursor: pointer;
+}
+
+    .smarthome-page .btn-danger:hover {
+        background-color: #e5534b;
+    }
 
 
 /* ========== DEVICE CREATE PAGE ========== */
