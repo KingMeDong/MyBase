@@ -25,5 +25,9 @@ namespace MyBase.Models {
 
         public string? Code { get; set; }
 
+
+        public int? RoomId { get; set; } // optional, damit kein Raum auch möglich ist
+        public Room? Room { get; set; }
+
     }
 }

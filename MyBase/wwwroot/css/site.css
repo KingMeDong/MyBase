@@ -1130,6 +1130,19 @@ form textarea {
     }
 
 
+
+.room-section {
+    margin-bottom: 2rem;
+}
+
+.room-title {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+    color: #f0f6fc;
+    border-bottom: 1px solid #30363d;
+    padding-bottom: 0.3rem;
+}
+
 /* ========== DEVICE CREATE PAGE ========== */
 
 

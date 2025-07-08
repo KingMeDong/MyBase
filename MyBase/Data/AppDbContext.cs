@@ -11,6 +11,7 @@ namespace MyBase.Data {
         public DbSet<CalendarEvent> CalendarEvents { get; set; }
         public DbSet<SmartDevice> SmartDevices { get; set; }
 
+        public DbSet<Room> Rooms { get; set; }
 
     }
 }

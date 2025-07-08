@@ -15,6 +15,8 @@ namespace MyBase.Pages.SmartHome {
         private readonly AppDbContext _context;
 
         public List<SmartDevice> Devices { get; set; } = new();
+        public Dictionary<string, List<SmartDevice>> DevicesByRoom { get; set; } = new();
+
         public Dictionary<int, string> PicoStates { get; set; } = new();
         public Dictionary<int, string> ZigbeeStates { get; set; } = new();
 
@@ -79,7 +81,11 @@ namespace MyBase.Pages.SmartHome {
                 }
             }
 
-            Devices = filtered;
+            //Devices = filtered;
+            DevicesByRoom = filtered
+            .GroupBy(d => d.Room?.Name ?? "Unbekannt")
+            .OrderBy(g => g.Key)
+            .ToDictionary(g => g.Key, g => g.ToList());
         }
 
         public async Task<IActionResult> OnPostToggleDeviceAsync(int id) {

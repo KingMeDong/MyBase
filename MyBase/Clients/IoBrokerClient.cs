@@ -34,7 +34,7 @@ namespace MyBase.Clients {
 
 
 
-        // Beispiel: SET Wert eines States
+        
         public async Task<bool> SetStateAsync(string stateId, object value) {
             var url = $"{_baseUrl}/set/{stateId}?value={value}";
 
