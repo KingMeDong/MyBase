@@ -35,6 +35,15 @@
                     <label asp-for="Device.Endpoint" class="form-label">Endpoint</label>
                     <input asp-for="Device.Endpoint" class="form-control" />
                 </div>
+                <div class="form-group">
+                    <label asp-for="Device.RoomId" class="form-label">Raum</label>
+                    <select asp-for="Device.RoomId" class="form-control">
+                        <option value="">-- Raum wählen --</option>
+                        @foreach (var room in Model.Rooms) {
+                            <option value="@room.Id">@room.Name</option>
+                        }
+                    </select>
+                </div>
 
                 <div class="form-group">
                     <label asp-for="Device.Description" class="form-label">Beschreibung</label>

@@ -2,10 +2,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using MyBase.Models;
 using MyBase.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace MyBase.Pages.SmartHome.Devices {
     public class CreateModel : PageModel {
         private readonly AppDbContext _context;
+        public List<Room> Rooms { get; set; } = new();
 
         public CreateModel(AppDbContext context) {
             _context = context;
@@ -15,19 +17,23 @@ namespace MyBase.Pages.SmartHome.Devices {
         public SmartDevice Device { get; set; } = new();
 
         public IActionResult OnGet() {
+            Rooms = _context.Rooms.OrderBy(r => r.Name).ToList();
             return Page();
         }
 
         public async Task<IActionResult> OnPostAsync() {
-            if (!ModelState.IsValid) return Page();
+            if (!ModelState.IsValid) {
+                Rooms = _context.Rooms.OrderBy(r => r.Name).ToList();
+                return Page();
+            }
 
             _context.SmartDevices.Add(Device);
             await _context.SaveChangesAsync();
-
             await UploadCodeToPicoAsync(Device);
 
             return Page();
         }
+
         public async Task<IActionResult> OnPostRestartAsync(int id) {
             var device = await _context.SmartDevices.FindAsync(id);
             if (device == null || device.Type != "Pico") return RedirectToPage();

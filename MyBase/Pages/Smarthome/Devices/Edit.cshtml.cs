@@ -16,24 +16,36 @@ namespace MyBase.Pages.SmartHome.Devices {
         [BindProperty]
         public SmartDevice Device { get; set; } = new();
 
+        public List<Room> Rooms { get; set; } = new();
+
         public async Task<IActionResult> OnGetAsync(int id) {
-            Device = await _context.SmartDevices.FirstOrDefaultAsync(d => d.Id == id);
+            Device = await _context.SmartDevices
+                .Include(d => d.Room)
+                .FirstOrDefaultAsync(d => d.Id == id);
+
             if (Device == null) return NotFound();
+
+            Rooms = await _context.Rooms.OrderBy(r => r.Name).ToListAsync();
+
             return Page();
         }
 
         public async Task<IActionResult> OnPostAsync() {
-            if (!ModelState.IsValid) return Page();
+            if (!ModelState.IsValid) {
+                Rooms = await _context.Rooms.OrderBy(r => r.Name).ToListAsync();
+                return Page();
+            }
 
             var existing = await _context.SmartDevices.FindAsync(Device.Id);
             if (existing == null) return NotFound();
 
             _context.Entry(existing).CurrentValues.SetValues(Device);
             await _context.SaveChangesAsync();
-
             await UploadCodeToPicoAsync(Device);
-            return Page(); // bleibt auf der Seite
+
+            return Page();
         }
+
 
         public async Task<IActionResult> OnPostRestartAsync(int id) {
             var device = await _context.SmartDevices.FindAsync(id);

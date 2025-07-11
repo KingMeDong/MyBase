@@ -41,7 +41,11 @@ namespace MyBase.Pages.SmartHome {
             AdminAlive = await _ioBrokerClient.GetStateAsync("system.adapter.admin.0.alive");
             FreeMem = await _ioBrokerClient.GetStateAsync("system.host.raspberrypi.freemem");
 
-            var allDevices = await _context.SmartDevices.ToListAsync();
+            //var allDevices = await _context.SmartDevices.ToListAsync();
+            var allDevices = await _context.SmartDevices
+                .Include(d => d.Room)
+                .ToListAsync();
+
             var filtered = new List<SmartDevice>();
             var httpClient = new HttpClient();
 

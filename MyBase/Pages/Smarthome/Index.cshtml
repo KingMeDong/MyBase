@@ -26,18 +26,19 @@
 
     @if (Model.DevicesByRoom.Any()) {
         @foreach (var group in Model.DevicesByRoom) {
-            <div class="room-section">
-                <h3 class="room-title">@group.Key</h3>
+            <div class="room-section mt-4">
+                <h3 class="room-title">📍 @group.Key</h3>
 
                 <div class="device-card-grid">
                     @foreach (var device in group.Value) {
                         <div class="smarthome-device-card">
                             <h4 class="device-title">@device.Name</h4>
 
-                            @* PICO *@
+                            @* PICO: Schalter *@
                             @if (device.Type == "Pico" && device.ControlType == "switch") {
 
                                 var status = Model.PicoStates.ContainsKey(device.Id) ? Model.PicoStates[device.Id] : "unbekannt";
+
                                 <form method="post" asp-page-handler="ToggleDevice" asp-route-id="@device.Id">
                                     <button type="submit" class="btn btn-sm mt-1 @(status == "on" ? "btn-danger" : "btn-green")">
                                         @(status == "on" ? "🔌 Ausschalten" : "🔆 Einschalten")
@@ -45,15 +46,18 @@
                                 </form>
                             }
 
-                           @* ZIGBEE *@
+                           @* ZIGBEE: Schalter / Slider / Anzeige *@
                            else if (device.Type == "Zigbee") {
 
                                 if (device.ControlType == "switch") {
 
-                                    var zigbeeStatus = Model.ZigbeeStates.ContainsKey(device.Id) ? Model.ZigbeeStates[device.Id] : "unbekannt";
+                                    var zState = Model.ZigbeeStates.ContainsKey(device.Id) ? Model.ZigbeeStates[device.Id] : "unbekannt";
+
+                                    bool isOn = zState == "true";
+
                                     <form method="post" asp-page-handler="ToggleZigbee" asp-route-id="@device.Id">
-                                        <button type="submit" class="btn btn-green btn-sm mt-1">
-                                            @(zigbeeStatus == "true" ? "🔌 Ausschalten" : "🔆 Einschalten")
+                                        <button type="submit" class="btn btn-sm mt-1 @(isOn ? "btn-danger" : "btn-green")">
+                                            @(isOn ? "🔌 Ausschalten" : "🔆 Einschalten")
                                         </button>
                                     </form>
                                 } else if (device.ControlType == "slider") {
