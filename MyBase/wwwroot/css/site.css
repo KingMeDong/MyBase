@@ -1304,3 +1304,166 @@ form textarea {
     border: none;
     cursor: pointer;
 }
+
+
+/* ========== Wall PAGE ========== */
+
+.smarthome-wall-page {
+    background: #111;
+    color: #fff;
+    font-family: sans-serif;
+}
+
+.wall-device-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 1rem;
+    justify-content: center;
+}
+
+.wall-device-card {
+    background: #222;
+    border-radius: 1rem;
+    padding: 1rem;
+    width: 250px;
+    text-align: center;
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+}
+
+    .wall-device-card h4 {
+        margin-bottom: 1rem;
+    }
+
+    .wall-device-card button,
+    .wall-device-card input[type="range"],
+    .wall-device-card input[type="color"] {
+        width: 100%;
+        font-size: 1.2rem;
+    }
+.smarthome-wall-page {
+    background: #111;
+    color: #fff;
+    font-family: sans-serif;
+}
+
+.wall-room-section {
+    margin: 2rem 1rem;
+}
+
+.wall-room-title {
+    font-size: 1.4rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #444;
+    padding-bottom: 0.5rem;
+    color: #ccc;
+}
+
+.wall-device-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 1rem 0;
+    justify-content: flex-start;
+}
+
+.wall-device-card {
+    background: #222;
+    border-radius: 1rem;
+    padding: 1rem;
+    width: 250px;
+    text-align: center;
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+}
+
+    .wall-device-card h4 {
+        margin-bottom: 1rem;
+    }
+
+    .wall-device-card button,
+    .wall-device-card input[type="range"],
+    .wall-device-card input[type="color"] {
+        width: 100%;
+        font-size: 1.2rem;
+    }
+
+.smarthome-wall-page .btn-green {
+    display: inline-block;
+    background-color: #238636;
+    color: #ffffff;
+    font-weight: bold;
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: 0.4rem;
+    text-decoration: none;
+    transition: background-color 0.2s ease-in-out;
+    cursor: pointer;
+}
+
+    .smarthome-wall-page .btn-green:hover {
+        background-color: #2ea043;
+    }
+
+.smarthome-wall-page .btn-danger {
+    display: inline-block;
+    background-color: #da3633;
+    color: #ffffff;
+    font-weight: bold;
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: 0.4rem;
+    text-decoration: none;
+    transition: background-color 0.2s ease-in-out;
+    cursor: pointer;
+}
+
+    .smarthome-wall-page .btn-danger:hover {
+        background-color: #e5534b;
+    }
+
+
+
+/* ========== FINACE PAGE ========== */
+
+
+
+.finance-page h2 {
+    margin-bottom: 1rem;
+}
+
+.finance-page .dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.finance-page .dashboard-card {
+    background-color: #1e1e1e;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s ease;
+    color: #fff;
+    text-decoration: none;
+}
+
+    .finance-page .dashboard-card:hover {
+        transform: scale(1.02);
+        cursor: pointer;
+    }
+
+.finance-page .dashboard-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.finance-page .dashboard-title {
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.finance-page .dashboard-description {
+    font-size: 0.9rem;
+    color: #ccc;
+}

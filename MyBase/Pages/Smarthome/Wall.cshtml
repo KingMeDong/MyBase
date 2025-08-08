@@ -1,0 +1,130 @@
+﻿@page
+@model MyBase.Pages.SmartHome.WallModel
+@{
+    ViewData["Title"] = "Smarthome Wall";
+}
+<form method="post">
+    @Html.AntiForgeryToken()
+</form>
+<main class="smarthome-wall-page">
+    <h2>🧱 Wandsteuerung</h2>
+
+    @if (Model.DevicesByRoom.Any()) {
+        @foreach (var group in Model.DevicesByRoom) {
+            <div class="room-section mt-4">
+                <h3 class="room-title">📍 @group.Key</h3>
+
+                <div class="device-card-grid">
+                    @foreach (var device in group.Value) {
+                        <div class="wall-device-card">
+                            <h4 class="device-title">@device.Name</h4>
+
+                            @* PICO: Schalter *@
+                            @if (device.Type == "Pico" && device.ControlType == "switch") {
+                                var status = Model.PicoStates.ContainsKey(device.Id) ? Model.PicoStates[device.Id] : "unbekannt";
+
+                                <button type="button"
+                                        class="btn toggle-btn @(status == "on" ? "btn-danger" : "btn-green")"
+                                        data-id="@device.Id"
+                                        data-type="pico"
+                                        data-status="@status">
+                                    @(status == "on" ? "🔌" : "🔆")
+                                </button>
+                            }
+
+                           @* ZIGBEE: Schalter *@
+                           else if (device.Type == "Zigbee" && device.ControlType == "switch") {
+                                var zState = Model.ZigbeeStates.ContainsKey(device.Id) ? Model.ZigbeeStates[device.Id] : "unbekannt";
+                                bool isOn = zState == "true";
+
+                                <button type="button"
+                                        class="btn toggle-btn @(isOn ? "btn-danger" : "btn-green")"
+                                        data-id="@device.Id"
+                                        data-type="zigbee"
+                                        data-status="@zState">
+                                    @(isOn ? "🔌" : "🔆")
+                                </button>
+                            } else {
+                                <p class="text-muted small">Nicht unterstützter Gerätetyp.</p>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    }
+</main>
+
+@section Scripts {
+    <script>
+        // Ein/Aus-Toggle
+        document.querySelectorAll('.toggle-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const id = btn.dataset.id;
+                const type = btn.dataset.type;
+                const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+                const current = btn.dataset.status;
+                const isOn = (current === "on" || current === "true");
+                const newStatus = isOn ? "off" : "on";
+
+                const handler = type === "pico" ? "ToggleDevice" : "ToggleZigbee";
+
+                try {
+                    const response = await fetch(`?handler=${handler}&id=${id}`, {
+                        method: "POST",
+                        headers: {
+                            "RequestVerificationToken": token
+                        }
+                    });
+
+                    if (response.ok) {
+                        btn.dataset.status = newStatus;
+                        btn.classList.toggle("btn-danger", !isOn);
+                        btn.classList.toggle("btn-green", isOn);
+                        btn.innerText = isOn ? "🔆" : "🔌";
+                    } else {
+                        alert("❌ Schaltvorgang fehlgeschlagen!");
+                    }
+                } catch (e) {
+                    alert("🚫 Fehler beim Senden der Anfrage.");
+                }
+            });
+        });
+
+        // Status-Update alle 5 Sekunden
+        async function refreshDeviceStates() {
+            try {
+                const res = await fetch('?handler=DeviceStates');
+                if (!res.ok) return;
+
+                const data = await res.json();
+
+                for (const [id, state] of Object.entries(data.pico)) {
+                    const btn = document.querySelector(`.toggle-btn[data-id="${id}"][data-type="pico"]`);
+                    if (btn) {
+                        const isOn = state === "on";
+                        btn.dataset.status = state;
+                        btn.classList.toggle("btn-danger", isOn);
+                        btn.classList.toggle("btn-green", !isOn);
+                        btn.innerText = isOn ? "🔌" : "🔆";
+                    }
+                }
+
+                for (const [id, state] of Object.entries(data.zigbee)) {
+                    const btn = document.querySelector(`.toggle-btn[data-id="${id}"][data-type="zigbee"]`);
+                    if (btn) {
+                        const isOn = state === "true";
+                        btn.dataset.status = state;
+                        btn.classList.toggle("btn-danger", isOn);
+                        btn.classList.toggle("btn-green", !isOn);
+                        btn.innerText = isOn ? "🔌" : "🔆";
+                    }
+                }
+            } catch (e) {
+                console.warn("⚠️ Fehler beim Status-Update", e);
+            }
+        }
+
+        setInterval(refreshDeviceStates, 5000);
+    </script>
+}

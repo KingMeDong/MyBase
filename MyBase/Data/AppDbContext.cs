@@ -13,5 +13,9 @@ namespace MyBase.Data {
 
         public DbSet<Room> Rooms { get; set; }
 
+
+        public DbSet<CodeRepository> CodeRepositories { get; set; }
+        public DbSet<CodeSnapshot> CodeSnapshots { get; set; }
+
     }
 }
