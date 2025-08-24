@@ -915,31 +915,52 @@ form textarea {
     padding: 12px;
     margin-bottom: 15px;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
+    flex-direction: column; /* mobil: Inhalt stapeln */
+    align-items: flex-start;
     border: 1px solid #30363d;
+    word-break: break-word; /* lange Strings umbrechen */
 }
 
 .files-page .media-file-info {
     font-size: 0.95rem;
     color: #ccc;
-    flex: 1;
+    width: 100%; /* volle Breite */
+    margin-bottom: 0.75rem;
 }
 
+    .files-page .media-file-info strong,
+    .files-page .media-file-info .file-name {
+        display: block;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        max-width: 100%;
+        line-height: 1.25;
+    }
+
 .files-page .media-file-actions {
-    margin-top: 8px;
     display: flex;
     gap: 0.5rem;
+    width: 100%; /* Buttons volle Breite nutzbar */
+    justify-content: flex-start; /* Buttons linksbündig */
+    flex-wrap: wrap;
 }
 
 @media (min-width: 600px) {
     .files-page .media-file-card {
-        flex-wrap: nowrap;
+        flex-direction: row; /* auf Desktop nebeneinander */
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .files-page .media-file-info {
+        flex: 1;
+        margin-bottom: 0;
     }
 
     .files-page .media-file-actions {
-        margin-top: 0;
+        width: auto;
+        justify-content: flex-end;
         margin-left: 20px;
     }
 }
@@ -971,6 +992,106 @@ form textarea {
     .files-page .btn-danger:hover {
         background-color: #c82333;
     }
+
+/* ========== FILES PAGE — UPLOAD MODAL ========== */
+
+.files-page .upload-modal {
+    position: fixed;
+    inset: 0;
+    display: none; /* per JS auf flex setzen */
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.6);
+    z-index: 1000;
+    padding: 1rem;
+}
+
+.files-page .upload-modal-content {
+    width: min(92vw, 520px);
+    max-height: 80vh;
+    overflow: auto;
+    background-color: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    padding: 1rem;
+    color: #c9d1d9;
+}
+
+.files-page .upload-list {
+    list-style: none;
+    margin: 0 0 1rem 0;
+    padding: 0;
+    max-height: 50vh;
+    overflow: auto;
+}
+
+.files-page .upload-item {
+    background-color: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.files-page .upload-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: .5rem;
+    margin-bottom: 0.5rem;
+}
+
+.files-page .upload-name {
+    font-weight: 600;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.files-page .upload-size {
+    color: #8b949e;
+    font-size: .9rem;
+    flex: 0 0 auto;
+}
+
+.files-page .upload-item progress {
+    width: 100%;
+    height: 14px;
+}
+
+.files-page .upload-status {
+    margin-top: .25rem;
+    font-size: .9rem;
+    text-align: right;
+}
+
+/* Gesamt-Progress im Modal */
+.files-page .upload-overall {
+    border-top: 1px solid #30363d;
+    padding-top: 0.75rem;
+    display: flex;
+    gap: .5rem;
+    align-items: center;
+}
+
+    .files-page .upload-overall progress {
+        flex: 1;
+        height: 16px;
+    }
+
+    .files-page .upload-overall span {
+        width: 3.5rem;
+        text-align: right;
+    }
+
+/* extra Tweaks für sehr kleine Geräte */
+@media (max-width: 380px) {
+    .files-page .upload-modal-content {
+        width: 94vw;
+        padding: .75rem;
+    }
+}
 
 /* ========== SETTINGS PAGE ========== */
 
@@ -1467,3 +1588,87 @@ form textarea {
     font-size: 0.9rem;
     color: #ccc;
 }
+
+
+/* ========== FILES PAGE — UPLOAD MODAL & PROGRESS ========== */
+.files-page .upload-modal {
+    position: fixed;
+    inset: 0;
+    display: none; /* per JS auf flex */
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.6);
+    z-index: 1000;
+}
+
+.files-page .upload-modal-content {
+    width: 520px;
+    background-color: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    padding: 1.5rem;
+    color: #c9d1d9;
+}
+
+.files-page .upload-list {
+    list-style: none;
+    margin: 0 0 1rem 0;
+    padding: 0;
+    max-height: 40vh;
+    overflow: auto;
+}
+
+.files-page .upload-item {
+    background-color: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.files-page .upload-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.5rem;
+}
+
+.files-page .upload-name {
+    font-weight: 600;
+}
+
+.files-page .upload-size {
+    color: #8b949e;
+    font-size: 0.9rem;
+}
+
+.files-page .upload-item progress {
+    width: 100%;
+    height: 14px;
+}
+
+.files-page .upload-status {
+    margin-top: 0.25rem;
+    font-size: 0.9rem;
+    color: #c9d1d9;
+    text-align: right;
+}
+
+.files-page .upload-overall {
+    border-top: 1px solid #30363d;
+    padding-top: 0.75rem;
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+    .files-page .upload-overall progress {
+        flex: 1;
+        height: 16px;
+    }
+
+    .files-page .upload-overall span {
+        width: 3.5rem;
+        text-align: right;
+    }

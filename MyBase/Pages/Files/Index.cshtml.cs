@@ -8,8 +8,10 @@ using System.Linq;
 namespace MyBase.Pages.Files {
     public class IndexModel : PageModel {
         public List<string> UploadedFiles { get; set; } = new();
+
         [BindProperty]
-        public IFormFile? UploadedFile { get; set; }
+        public List<IFormFile> FilesToUpload { get; set; } = new();
+
         public void OnGet() {
             FileHelper.EnsureUploadDirectoryExists();
             UploadedFiles = Directory.GetFiles(FileHelper.UploadDirectory)
@@ -17,17 +19,26 @@ namespace MyBase.Pages.Files {
                                      .ToList();
         }
 
-
         public async Task<IActionResult> OnPostUploadAsync() {
-            if (UploadedFile != null) {
-                FileHelper.EnsureUploadDirectoryExists();
-                var filePath = FileHelper.GetFilePath(Path.GetFileName(UploadedFile.FileName));
-                using (var stream = new FileStream(filePath, FileMode.Create)) {
-                    await UploadedFile.CopyToAsync(stream);
+            FileHelper.EnsureUploadDirectoryExists();
+
+            if (FilesToUpload != null && FilesToUpload.Count > 0) {
+                foreach (var file in FilesToUpload.Where(f => f != null && f.Length > 0)) {
+                    var safeName = Path.GetFileName(file.FileName);
+                    var filePath = FileHelper.GetFilePath(safeName);
+                    using var stream = new FileStream(filePath, FileMode.Create);
+                    await file.CopyToAsync(stream);
                 }
             }
+
+            // Bei AJAX: JSON zurück
+            if (Request.Headers.TryGetValue("X-Requested-With", out var xrw) && xrw == "XMLHttpRequest") {
+                return new JsonResult(new { ok = true, uploaded = FilesToUpload?.Count ?? 0 });
+            }
+
             return RedirectToPage();
         }
+
         public async Task<IActionResult> OnPostDeleteAsync(string fileName) {
             if (!string.IsNullOrWhiteSpace(fileName)) {
                 var filePath = FileHelper.GetFilePath(fileName);
@@ -36,12 +47,11 @@ namespace MyBase.Pages.Files {
                 }
             }
 
+            if (Request.Headers.TryGetValue("X-Requested-With", out var xrw) && xrw == "XMLHttpRequest") {
+                return new JsonResult(new { ok = true, deleted = fileName });
+            }
+
             return RedirectToPage();
         }
-
     }
-
-
-
-
 }

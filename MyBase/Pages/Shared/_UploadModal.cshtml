@@ -1,0 +1,18 @@
+﻿
+@* Gemeinsames Upload-Modal (wird per Partial eingebunden) *@
+<div id="uploadModal" class="upload-modal" style="display:none;">
+    <div class="upload-modal-content">
+        <h3>📤 Upload läuft…</h3>
+
+        <!-- Per-Datei-Liste mit Progress -->
+        <ul id="uploadList" class="upload-list">
+            @* Wird von JS befüllt *@
+        </ul>
+
+        <!-- Gesamtfortschritt -->
+        <div class="upload-overall">
+            <progress id="uploadOverallProgress" value="0" max="100" style="width:100%;"></progress>
+            <span id="uploadOverallStatus">0%</span>
+        </div>
+    </div>
+</div>

@@ -6,6 +6,12 @@ var builder = WebApplication.CreateBuilder(args);
 
 FileHelper.Initialize(builder.Configuration);
 
+//Maximale Dateigröße aufheben
+builder.WebHost.ConfigureKestrel(k => {
+    k.Limits.MaxRequestBodySize = null;
+});
+
+
 
 builder.Configuration
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
