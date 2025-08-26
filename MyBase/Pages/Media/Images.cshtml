@@ -1,0 +1,71 @@
+﻿@page
+@model MyBase.Pages.Media.ImagesModel
+@using MyBase.Data
+@using System.IO
+
+@{
+    ViewData["Title"] = "Bilder";
+
+    // Erste Seite serverseitig vorbereiten (z. B. 60 Items)
+    var pageSize = 60;
+    var allFiles = Directory.GetFiles(FileHelper.ImagesDirectory)
+                            .Select(p => global::System.IO.Path.GetFileName(p))
+                            .OrderBy(n => n)
+                            .ToList();
+    var firstPage = allFiles.Take(pageSize).ToList();
+}
+
+<main class="media-images-page">
+    <h2>🖼️ Bilder</h2>
+
+    <!-- Upload-Formular (gleiche Mechanik wie im Dateimanager) -->
+    <form id="uploadImagesForm" enctype="multipart/form-data"
+          data-uploader
+          data-target-url="?handler=Upload"
+          data-input-name="FilesToUpload"
+          data-modal="#uploadModal"
+          data-auto-reload="true">
+        @Html.AntiForgeryToken()
+        <div class="form-group">
+            <input type="file" name="FilesToUpload" multiple accept="image/*" />
+            <button type="submit" class="btn-green">📤 Hochladen</button>
+        </div>
+    </form>
+
+    <!-- Wiederverwendbares Upload-Modal -->
+    @await Html.PartialAsync("_UploadModal")
+
+    <h3>📂 Hochgeladene Bilder (@allFiles.Count)</h3>
+
+    <div id="gallery" class="gallery-grid" data-pagesize="@pageSize">
+        @foreach (var fileName in firstPage) {
+            var thumbUrl = $"/thumbs/{fileName}?w=320";
+            var fullUrl = $"/media/images/{fileName}";
+            <div class="gallery-card" data-fn="@fileName">
+                <a href="@fullUrl" target="_blank" rel="noopener">
+                    <img src="@thumbUrl" alt="@fileName" loading="lazy" />
+                </a>
+                <div class="gallery-meta">
+                    <span class="file-name">@fileName</span>
+                    <div class="actions">
+                        <a class="icon-btn" title="Download" href="/download/@fileName?scope=images" download>⬇️</a>
+                        <form method="post" asp-page-handler="Delete" asp-route-fileName="@fileName"
+                              onsubmit="return confirm('Bild wirklich löschen?');">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="icon-btn danger" title="Löschen">🗑️</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Sentinel für Lazy-Loading -->
+    <div id="gallery-sentinel" style="height:1px;"></div>
+</main>
+
+@section Scripts {
+    <script src="~/js/uploader.js"></script>
+    <script src="~/js/images-gallery.js"></script>
+    <script>Uploader.autoAttach();</script>
+}

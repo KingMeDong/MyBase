@@ -492,6 +492,209 @@ form textarea {
             background-color: #484f58;
         }
 
+
+
+/* ========== MEDIA IMAGES PAGE ========== */
+
+/* Upload-Zeile */
+.media-images-page .form-group {
+    margin-bottom: 1rem;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.media-images-page input[type="file"] {
+    flex: 1;
+    background: #0d1117;
+    color: #c9d1d9;
+    border: 1px solid #30363d;
+    border-radius: .25rem;
+    padding: .5rem;
+}
+
+/* Gallery-Grid */
+.media-images-page .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); /* minimal größer wie Movies */
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.media-images-page .gallery-card {
+    background: #1c1f26;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform .08s ease, box-shadow .08s ease, border-color .08s ease;
+}
+
+    .media-images-page .gallery-card:hover {
+        transform: translateY(-1px);
+        border-color: #3b4450;
+        box-shadow: 0 6px 16px rgba(0,0,0,.35);
+    }
+
+    .media-images-page .gallery-card img {
+        width: 100%;
+        height: 160px;
+        object-fit: cover;
+        background: #0d1117;
+        display: block;
+    }
+
+/* Meta/Actions */
+.media-images-page .gallery-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+}
+
+    .media-images-page .gallery-meta .file-name {
+        flex: 1;
+        min-width: 0;
+        font-size: .92rem;
+        color: #c9d1d9;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+/* Icon-Buttons im Movie-Stil */
+.media-images-page .icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    background: #30363d;
+    color: #fff;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: background-color .12s ease, transform .06s ease;
+}
+
+    .media-images-page .icon-btn:hover {
+        background: #484f58;
+        transform: translateY(-1px);
+    }
+
+    .media-images-page .icon-btn:active {
+        transform: translateY(0);
+    }
+
+    .media-images-page .icon-btn.danger {
+        background: #dc3545;
+    }
+
+        .media-images-page .icon-btn.danger:hover {
+            background: #c82333;
+        }
+
+/* Optional: Upload-Modal (falls genutzt) */
+.media-images-page .upload-modal {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,.6);
+    z-index: 1000;
+    padding: 1rem;
+}
+
+.media-images-page .upload-modal-content {
+    width: min(92vw,520px);
+    max-height: 80vh;
+    overflow: auto;
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: .5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,.4);
+    padding: 1rem;
+    color: #c9d1d9;
+}
+
+.media-images-page .upload-list {
+    list-style: none;
+    margin: 0 0 1rem 0;
+    padding: 0;
+    max-height: 50vh;
+    overflow: auto;
+}
+
+.media-images-page .upload-item {
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: .5rem;
+    padding: .75rem;
+    margin-bottom: .75rem;
+}
+
+.media-images-page .upload-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: .5rem;
+    margin-bottom: .5rem;
+}
+
+.media-images-page .upload-name {
+    font-weight: 600;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.media-images-page .upload-size {
+    color: #8b949e;
+    font-size: .9rem;
+    flex: 0 0 auto;
+}
+
+.media-images-page .upload-item progress {
+    width: 100%;
+    height: 14px;
+}
+
+.media-images-page .upload-status {
+    margin-top: .25rem;
+    font-size: .9rem;
+    text-align: right;
+}
+
+.media-images-page .upload-overall {
+    border-top: 1px solid #30363d;
+    padding-top: .75rem;
+    display: flex;
+    gap: .5rem;
+    align-items: center;
+}
+
+    .media-images-page .upload-overall progress {
+        flex: 1;
+        height: 16px;
+    }
+
+    .media-images-page .upload-overall span {
+        width: 3.5rem;
+        text-align: right;
+    }
+
+@media (max-width:380px) {
+    .media-images-page .upload-modal-content {
+        width: 94vw;
+        padding: .75rem;
+    }
+}
+
+
 /* ========== LOGIN PAGE ========== */
 
 .login-page {

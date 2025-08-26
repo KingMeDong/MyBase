@@ -1,70 +1,71 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using MyBase.Data;
 using MyBase.Models;
-using MyBase.Services; // hinzuf�gen
+using MyBase.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
+// FileHelper initialisieren (für Pfade wie ImagesDirectory)
 FileHelper.Initialize(builder.Configuration);
 
-//Maximale Dateigr��e aufheben
+// Maximale Requestgröße (Kestrel) aufheben
 builder.WebHost.ConfigureKestrel(k => {
     k.Limits.MaxRequestBodySize = null;
 });
 
-
-
+// Konfiguration laden
 builder.Configuration
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
     .AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
 
-
-// Add services to the container.
+// Services
 builder.Services.AddRazorPages();
 builder.Services.AddSession();
-
-// DbContext registrieren
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
-
 builder.Services.AddHostedService<ReminderService>();
 
+// Für Download-/Thumbnail-APIs
 builder.Services.AddControllers();
 
-
+// Externe Clients
 builder.Services.AddHttpClient<MyBase.Clients.IoBrokerClient>();
-
-
-
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
-{
-    
+// Fehlerseite/HSTS
+if (!app.Environment.IsDevelopment()) {
     app.UseExceptionHandler("/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
+
+// Statische Dateien aus wwwroot
 app.UseStaticFiles();
 
+// 🔹 Statische Auslieferung der ORIGINAL-Bilder außerhalb von wwwroot
+//    -> /media/images/<dateiname> zeigt Datei aus FileHelper.ImagesDirectory
+app.UseStaticFiles(new StaticFileOptions {
+    FileProvider = new PhysicalFileProvider(FileHelper.ImagesDirectory),
+    RequestPath = "/media/images"
+});
+
 app.UseRouting();
-app.MapControllers();
 
+app.MapControllers();   // wichtig: aktiviert /download und /thumbs
 app.UseSession();
-
 app.UseAuthorization();
 
-
+// Root auf Login umleiten
 app.MapGet("/", context => {
     context.Response.Redirect("/Account/Login");
     return Task.CompletedTask;
 });
 
-
+// (Bleibt: Dein Streaming-Endpunkt für Videos)
 app.MapGet("/Media/Stream", async (HttpContext context) => {
     var pathParam = context.Request.Query["path"];
     var filePath = System.Net.WebUtility.UrlDecode(pathParam);
@@ -79,34 +80,21 @@ app.MapGet("/Media/Stream", async (HttpContext context) => {
     long start = 0;
     long end = totalLength - 1;
 
-    // Dynamischer ContentType
     string contentType = "application/octet-stream";
     var extension = Path.GetExtension(filePath).ToLowerInvariant();
-
     switch (extension) {
-        case ".mp4":
-            contentType = "video/mp4";
-            break;
-        case ".webm":
-            contentType = "video/webm";
-            break;
-        case ".mkv":
-            contentType = "video/x-matroska";
-            break;
-        case ".avi":
-            contentType = "video/x-msvideo";
-            break;
-        default:
-            contentType = "application/octet-stream";
-            break;
+        case ".mp4": contentType = "video/mp4"; break;
+        case ".webm": contentType = "video/webm"; break;
+        case ".mkv": contentType = "video/x-matroska"; break;
+        case ".avi": contentType = "video/x-msvideo"; break;
+        default: contentType = "application/octet-stream"; break;
     }
 
     context.Response.Headers.Add("Accept-Ranges", "bytes");
     context.Response.ContentType = contentType;
 
     if (context.Request.Headers.ContainsKey("Range")) {
-        var rangeHeader = context.Request.Headers["Range"].ToString();
-        // Beispiel-Format: Range: bytes=0-999999
+        var rangeHeader = context.Request.Headers["Range"].ToString(); // z.B. "bytes=0-999999"
         var range = rangeHeader.Replace("bytes=", "").Split('-');
         start = long.Parse(range[0]);
         if (range.Length > 1 && !string.IsNullOrEmpty(range[1])) {
@@ -136,10 +124,5 @@ app.MapGet("/Media/Stream", async (HttpContext context) => {
     }
 });
 
-
-
-
-
 app.MapRazorPages();
-
 app.Run();

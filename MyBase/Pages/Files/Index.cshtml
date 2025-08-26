@@ -46,9 +46,9 @@
                         <div>📦 Größe: @fileSizeMB MB</div>
                     </div>
                     <div class="media-file-actions">
-                        <a class="btn btn-gray" href="/download/@fileName" download>📥 Download</a>
-                        <form method="post" asp-page-handler="Delete" asp-route-fileName="@fileName"
-                              onsubmit="return confirm('Datei wirklich löschen?');">
+                        <!-- 👇 Scope=files explizit -->
+                        <a class="btn btn-gray" href="/download/@fileName?scope=files" download>📥 Download</a>
+                        <form method="post" asp-page-handler="Delete" asp-route-fileName="@fileName" onsubmit="return confirm('Datei wirklich löschen?');">
                             <button type="submit" class="btn btn-danger">🗑️ Löschen</button>
                         </form>
                     </div>
