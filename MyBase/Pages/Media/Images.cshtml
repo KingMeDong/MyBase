@@ -5,43 +5,53 @@
 
 @{
     ViewData["Title"] = "Bilder";
-
-    // Erste Seite serverseitig vorbereiten (z. B. 60 Items)
-    var pageSize = 60;
-    var allFiles = Directory.GetFiles(FileHelper.ImagesDirectory)
-                            .Select(p => global::System.IO.Path.GetFileName(p))
-                            .OrderBy(n => n)
-                            .ToList();
-    var firstPage = allFiles.Take(pageSize).ToList();
+    var pageSize = Model.PageSize;
+    var sort = Model.Sort ?? "taken_desc";
 }
 
 <main class="media-images-page">
     <h2>🖼️ Bilder</h2>
 
-    <!-- Upload-Formular (gleiche Mechanik wie im Dateimanager) -->
+    <!-- Sort -->
+    <form method="get" class="form-group" style="margin-top:.5rem">
+        <label for="sort">Sortieren nach:</label>
+        <select id="sort" name="sort" class="btn-gray" onchange="this.form.submit()">
+            <option value="taken_desc"  selected="@("taken_desc"  == sort)">Aufnahmedatum ↓</option>
+            <option value="taken_asc"   selected="@("taken_asc"   == sort)">Aufnahmedatum ↑</option>
+            <option value="upload_desc" selected="@("upload_desc" == sort)">Uploaddatum ↓</option>
+            <option value="upload_asc"  selected="@("upload_asc"  == sort)">Uploaddatum ↑</option>
+            <option value="name_asc"    selected="@("name_asc"    == sort)">Name A–Z</option>
+            <option value="name_desc"   selected="@("name_desc"   == sort)">Name Z–A</option>
+        </select>
+    </form>
+
+    <!-- Upload -->
     <form id="uploadImagesForm" enctype="multipart/form-data"
           data-uploader
-          data-target-url="?handler=Upload"
+          data-target-url="?handler=Upload&sort=@sort"
           data-input-name="FilesToUpload"
           data-modal="#uploadModal"
-          data-auto-reload="true">
+          data-auto-reload="false">
         @Html.AntiForgeryToken()
-        <div class="form-group">
+        <div class="form-group" style="margin-top:.25rem">
             <input type="file" name="FilesToUpload" multiple accept="image/*" />
             <button type="submit" class="btn-green">📤 Hochladen</button>
         </div>
     </form>
 
-    <!-- Wiederverwendbares Upload-Modal -->
     @await Html.PartialAsync("_UploadModal")
 
-    <h3>📂 Hochgeladene Bilder (@allFiles.Count)</h3>
+    <h3>📂 Hochgeladene Bilder (@Model.TotalCount)</h3>
 
-    <div id="gallery" class="gallery-grid" data-pagesize="@pageSize">
-        @foreach (var fileName in firstPage) {
+    <div id="gallery" class="gallery-grid" data-pagesize="@pageSize" data-sort="@sort">
+        @foreach (var it in Model.Images)
+        {
+            var fileName = it.FileName;
             var thumbUrl = $"/thumbs/{fileName}?w=320";
-            var fullUrl = $"/media/images/{fileName}";
-            <div class="gallery-card" data-fn="@fileName">
+            var fullUrl  = $"/media/images/{fileName}";
+            <div class="gallery-card" data-fn="@fileName"
+                 data-taken="@it.TakenDateUtc?.ToString("o")"
+                 data-upload="@it.UploadDateUtc.ToString("o")">
                 <a href="@fullUrl" target="_blank" rel="noopener">
                     <img src="@thumbUrl" alt="@fileName" loading="lazy" />
                 </a>
@@ -56,11 +66,18 @@
                         </form>
                     </div>
                 </div>
+                <!-- Sichtbare Datumszeile (UTC zur Diagnose) -->
+                <div class="gallery-dates" style="padding:6px 8px;color:#8b949e;font-size:.85rem;">
+                    ⬆️ Upload: @it.UploadDateUtc.ToString("yyyy-MM-dd HH:mm:ss 'UTC'")
+                    @if (it.TakenDateUtc.HasValue)
+                    {
+                        <span> • 📸 @it.TakenDateUtc.Value.ToString("yyyy-MM-dd HH:mm:ss 'UTC'")</span>
+                    }
+                </div>
             </div>
         }
     </div>
 
-    <!-- Sentinel für Lazy-Loading -->
     <div id="gallery-sentinel" style="height:1px;"></div>
 </main>
 
