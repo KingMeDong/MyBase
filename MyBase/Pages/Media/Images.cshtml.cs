@@ -1,10 +1,16 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using MetadataExtractor;
 using MetadataExtractor.Formats.Exif;
 using MyBase.Data;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
+
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Formats.Jpeg;
+
+
 
 namespace MyBase.Pages.Media {
     [RequestSizeLimit(long.MaxValue)]
@@ -35,7 +41,7 @@ namespace MyBase.Pages.Media {
             var files = global::System.IO.Directory.GetFiles(FileHelper.ImagesDirectory);
             TotalCount = files.Length;
 
-            // ENRICH: F�r korrekte erste Seite global anreichern + sortieren, DANN Take(PageSize)
+            // ENRICH: Für korrekte erste Seite global anreichern + sortieren, DANN Take(PageSize)
             var needTaken = Sort.StartsWith("taken", StringComparison.OrdinalIgnoreCase);
 
             var enriched = files.Select(full => {
@@ -117,5 +123,66 @@ namespace MyBase.Pages.Media {
                 _ => list.OrderByDescending(i => i.TakenDateUtc ?? i.UploadDateUtc).ToList(),
             };
         }
+
+
+        // erstellt/aktualisiert einen Cache-Thumb, wenn fehlend oder Original neuer ist
+        private static async Task<bool> EnsureThumbCachedAsync(string originalPath, int w, int h) {
+            var safeW = Math.Clamp(w, 32, 2000);
+            var safeH = h <= 0 ? 0 : Math.Clamp(h, 32, 2000);
+
+            var fileName = global::System.IO.Path.GetFileName(originalPath);
+            var cached = FileHelper.GetImageThumbCachePath(fileName, safeW, safeH);
+
+            var origInfo = new FileInfo(originalPath);
+            var cacheInfo = new FileInfo(cached);
+
+            // Cache aktuell?
+            if (cacheInfo.Exists && cacheInfo.LastWriteTimeUtc >= origInfo.LastWriteTimeUtc)
+                return false;
+
+            global::System.IO.Directory.CreateDirectory(Path.GetDirectoryName(cached)!);
+
+            using var image = await Image.LoadAsync(originalPath);
+            image.Mutate(x =>
+            {
+                x.AutoOrient();
+                var size = new Size(safeW, safeH == 0 ? safeW : safeH);
+                x.Resize(new ResizeOptions { Size = size, Mode = ResizeMode.Max, Sampler = KnownResamplers.Lanczos3 });
+            });
+
+            var enc = new JpegEncoder { Quality = 80 };
+            await using var fs = new FileStream(cached, FileMode.Create, FileAccess.Write, FileShare.Read);
+            await image.SaveAsync(fs, enc);
+
+            return true;
+        }
+
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> OnPostRebuildCacheAsync(int w = 320, int h = 0, string? returnUrl = null) {
+            FileHelper.EnsureImageDirectoryExists();
+            FileHelper.EnsureImagesThumbCacheDirectoryExists();
+
+            var files = global::System.IO.Directory.GetFiles(FileHelper.ImagesDirectory)
+                                 .Where(p => !p.Contains($"{Path.DirectorySeparatorChar}_cache{Path.DirectorySeparatorChar}"))
+                                 .ToList();
+
+            int updated = 0;
+            foreach (var path in files) {
+                if (await EnsureThumbCachedAsync(path, w, h))
+                    updated++;
+            }
+
+            // AJAX → JSON
+            if (Request.Headers.TryGetValue("X-Requested-With", out var xrw) && xrw == "XMLHttpRequest")
+                return new JsonResult(new { ok = true, processed = files.Count, updated });
+
+            // klassischer POST → zurück, wenn lokale URL; sonst zur Images-Seite
+            if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+                return Redirect(returnUrl);
+
+            TempData["GalleryMessage"] = $"Cache geprüft: {files.Count} Bilder, {updated} erstellt/aktualisiert.";
+            return RedirectToPage(new { sort = this.Sort });
+        }
+
     }
 }

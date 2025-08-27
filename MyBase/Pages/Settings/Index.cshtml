@@ -6,14 +6,125 @@
 
 <main class="settings-page">
     <h2>⚙️ Einstellungen</h2>
-    <p>Hier kannst du verschiedene Einstellungen für MyBase vornehmen.</p>
 
-    <!-- Platzhalter für zukünftige Settings -->
-    <ul class="settings-list">
-        <li>🔒 Passwort ändern</li>
-        <li>🎨 Theme / Dark Mode</li>
-        <li>🗄️ Speicherort Medien ändern</li>
-        <li>🏠 Smarthome Optionen</li>
-        <!-- weitere Settings -->
-    </ul>
+    <!-- verstecktes Anti-Forgery-Token für AJAX -->
+    <form id="af-token" method="post" style="display:none">
+        @Html.AntiForgeryToken()
+    </form>
+
+    <div class="settings-grid">
+
+        <!-- Card: Bilder-Cache -->
+        <section class="setting-card" id="card-bilder-cache">
+            <div class="card-head">
+                <span class="card-icon">🖼️</span>
+                <h3 class="card-title">Bilder-Cache</h3>
+            </div>
+            <p class="card-desc">
+                Thumbnails für die Bilder-Galerie prüfen/aufbauen. Hilfreich, wenn Dateien direkt auf den Server kopiert wurden.
+            </p>
+
+            <div class="card-actions">
+                <button id="btnRebuildThumbs" type="button" class="btn-gray" data-w="320" data-h="0">
+                    🔧 Cache prüfen/aufbauen (320px)
+                </button>
+                <span id="thumbJobStatus" class="status-pill" aria-live="polite"></span>
+            </div>
+
+            <div id="thumbJobDetail" class="card-foot"></div>
+        </section>
+
+        <!-- Card: Dateimanager (Platzhalter – du kannst später füllen) -->
+        <section class="setting-card compact" id="card-files">
+            <div class="card-head">
+                <span class="card-icon">📁</span>
+                <h3 class="card-title">Dateimanager</h3>
+            </div>
+            <p class="card-desc">Pfade, Limits & Verhalten für Upload/Download konfigurieren.</p>
+            <div class="card-actions">
+                <a class="btn-gray" href="/Files">Zum Dateimanager</a>
+            </div>
+        </section>
+
+        <!-- Card: Medienpfade (Platzhalter – zeigt nur Info) -->
+        <section class="setting-card compact" id="card-paths">
+            <div class="card-head">
+                <span class="card-icon">🗂️</span>
+                <h3 class="card-title">Medienpfade</h3>
+            </div>
+            <p class="card-desc">
+                Übersicht der verwendeten Verzeichnisse.
+            </p>
+            <div class="card-foot">
+                <div><strong>Bilder:</strong> @MyBase.Data.FileHelper.ImagesDirectory</div>
+                <div><strong>Thumb-Cache:</strong> @MyBase.Data.FileHelper.ImagesThumbCacheDirectory</div>
+            </div>
+        </section>
+
+        <!-- Du kannst beliebig weitere Cards ergänzen … -->
+
+    </div>
 </main>
+
+@section Scripts {
+    <script>
+        (function(){
+          const btn    = document.getElementById('btnRebuildThumbs');
+          const status = document.getElementById('thumbJobStatus');
+          const detail = document.getElementById('thumbJobDetail');
+
+          function setStatus(type, text){
+            status.className = 'status-pill ' + (type || 'idle');
+            status.textContent = text || '';
+          }
+          function setDetail(text){ detail.textContent = text || ''; }
+
+          async function rebuildCacheAjax(w, h){
+            btn.disabled = true;
+            setStatus('loading', 'läuft …');
+            setDetail('');
+
+            try {
+              const fd = new FormData();
+              fd.append('w', String(w));
+              fd.append('h', String(h));
+              const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+              if (token) fd.append('__RequestVerificationToken', token);
+
+              const res = await fetch('/Media/Images?handler=RebuildCache', {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                body: fd
+              });
+
+              if (!res.ok) {
+                setStatus('err', 'Fehler');
+                setDetail('HTTP ' + res.status + ' — Cache-Aufbau fehlgeschlagen.');
+                return;
+              }
+
+              const data = await res.json();
+              if (data && data.ok) {
+                setStatus('ok', 'fertig');
+                setDetail(`Verarbeitet: ${data.processed} · aktualisiert/neu: ${data.updated}`);
+              } else {
+                setStatus('err', 'Fehler');
+                setDetail('Unerwartete Server-Antwort.');
+              }
+            } catch (e) {
+              setStatus('err', 'Fehler');
+              setDetail('Netzwerk-/Laufzeitfehler: ' + (e?.message || e));
+            } finally {
+              btn.disabled = false;
+              setTimeout(() => { if (status.classList.contains('ok')) setStatus('idle',''); }, 4000);
+            }
+          }
+
+          btn?.addEventListener('click', () => {
+            const w = Number(btn.dataset.w || '320');
+            const h = Number(btn.dataset.h || '0');
+            rebuildCacheAjax(w, h);
+          });
+        })();
+    </script>
+}
