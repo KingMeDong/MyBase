@@ -6,11 +6,6 @@ using MyBase.Models.Finance;
 
 namespace MyBase.Services.MarketData;
 
-/// <summary>
-/// Kümmert sich um die Verbindung zum IB Client Portal Gateway.
-/// Prüft Auth-Status, sendet Heartbeats (/tickle),
-/// und aktualisiert FeedState in der Datenbank.
-/// </summary>
 public class SessionManager : BackgroundService {
     private readonly IHttpClientFactory _httpFactory;
     private readonly IServiceProvider _sp;
@@ -19,20 +14,21 @@ public class SessionManager : BackgroundService {
     private readonly TimeSpan _statusPoll;
 
     private SessionState _state = SessionState.Disconnected;
-
     public SessionState State => _state;
 
     public SessionManager(
         IHttpClientFactory httpFactory,
         IServiceProvider sp,
         ILogger<SessionManager> log,
-        IOptionsSnapshot<CpapiOptions> opt) {
+        IOptionsMonitor<CpapiOptions> opt
+    ) {
         _httpFactory = httpFactory;
         _sp = sp;
         _log = log;
 
-        _heartbeat = TimeSpan.FromSeconds(opt.Value.HeartbeatSeconds);
-        _statusPoll = TimeSpan.FromSeconds(opt.Value.StatusPollSeconds);
+        var cfg = opt.CurrentValue;
+        _heartbeat = TimeSpan.FromSeconds(cfg.HeartbeatSeconds);
+        _statusPoll = TimeSpan.FromSeconds(cfg.StatusPollSeconds);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken) {
@@ -42,67 +38,117 @@ public class SessionManager : BackgroundService {
 
         while (!stoppingToken.IsCancellationRequested) {
             try {
-                // 1) DesiredState aus DB lesen
-                var desired = await GetDesiredStateAsync(stoppingToken);
+                var gwDesired = await GetGatewayDesiredAsync(stoppingToken);
 
-                // 2) Status prüfen (seltener)
-                if ((DateTime.UtcNow - lastStatus) > _statusPoll) {
-                    _state = await ProbeAuthAsync(client, stoppingToken);
-                    lastStatus = DateTime.UtcNow;
+                // ⬇️ Wenn Gateway gestoppt ist, nichts tun
+                if (gwDesired == "Stopped") {
+                    _state = SessionState.Disconnected;
+                    await Task.Delay(1000, stoppingToken);
+                    continue;
                 }
 
-                // 3) Heartbeat schicken (häufiger)
+                var feedDesired = await GetFeedDesiredAsync(stoppingToken);
+
+                // 🔹 SSO validieren
+                var ssoOk = await EnsureSsoAsync(client, stoppingToken);
+                if (!ssoOk) {
+                    _state = SessionState.NeedsLogin;
+                } else {
+                    var fastProbe = _state != SessionState.Connected;
+                    var due = fastProbe ? TimeSpan.FromSeconds(5) : _statusPoll;
+
+                    if ((DateTime.UtcNow - lastStatus) > due) {
+                        _state = await ProbeAuthAsync(client, stoppingToken);
+                        lastStatus = DateTime.UtcNow;
+
+                        if (_state == SessionState.Connecting)
+                            await EnsureConnectedAsync(client, stoppingToken);
+                    }
+                }
+
+                // Heartbeat senden (immer wenn Session aktiv läuft)
                 if ((DateTime.UtcNow - lastTickle) > _heartbeat &&
-                    (desired == "Running" || _state == SessionState.Connected)) {
+                    _state == SessionState.Connected) {
                     await TickleAsync(client, stoppingToken);
                     lastTickle = DateTime.UtcNow;
                     await UpdateHeartbeatAsync();
                 }
 
-                // 4) Falls auth ok aber noch nicht connected: Brokerage Session aktivieren
-                if (_state == SessionState.Connecting) {
-                    await EnsureConnectedAsync(client, stoppingToken);
-                }
-
-                await Task.Delay(1000, stoppingToken); // kleine Pause im Loop
-            } catch (OperationCanceledException) { /* Shutdown */ } catch (Exception ex) {
+                await Task.Delay(1000, stoppingToken);
+            } catch (OperationCanceledException) { } catch (Exception ex) {
                 _log.LogError(ex, "Fehler im SessionManager");
                 _state = SessionState.Error;
                 await SetFeedLastErrorAsync(ex.Message);
-                await Task.Delay(3000, stoppingToken); // Backoff
+                SessionLogBuffer.Append($"Exception: {ex.Message}");
+                await Task.Delay(3000, stoppingToken);
             }
         }
     }
-    private async Task<string> GetDesiredStateAsync(CancellationToken ct) {
+
+    private async Task<string> GetGatewayDesiredAsync(CancellationToken ct) {
+        using var scope = _sp.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var s = await db.AppSettings.FindAsync(new object?[] { "GatewayDesiredState" }, ct);
+        return s?.Value ?? "Running";
+    }
+
+    private async Task<string> GetFeedDesiredAsync(CancellationToken ct) {
         using var scope = _sp.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var s = await db.AppSettings.FindAsync(new object?[] { "MarketDataDesiredState" }, ct);
         return s?.Value ?? "Stopped";
     }
 
+    private async Task<bool> EnsureSsoAsync(HttpClient c, CancellationToken ct) {
+        try {
+            var res = await c.GetAsync("/v1/api/sso/validate", ct);
+            if (res.IsSuccessStatusCode) {
+                SessionLogBuffer.Append("SSO validate: ok");
+                return true;
+            }
+
+            SessionLogBuffer.Append($"SSO validate: {(int)res.StatusCode}");
+            return false;
+        } catch (Exception ex) {
+            SessionLogBuffer.Append($"SSO validate Fehler: {ex.Message}");
+            return false;
+        }
+    }
+
     private async Task<SessionState> ProbeAuthAsync(HttpClient c, CancellationToken ct) {
         try {
             var res = await c.GetAsync("/v1/api/iserver/auth/status", ct);
-            if (!res.IsSuccessStatusCode) return SessionState.Disconnected;
+
+            if (!res.IsSuccessStatusCode) {
+                SessionLogBuffer.Append($"Auth status HTTP {(int)res.StatusCode}");
+                return SessionState.Disconnected;
+            }
 
             var json = await res.Content.ReadFromJsonAsync<AuthStatus>(cancellationToken: ct);
-            if (json is null) return SessionState.Disconnected;
+            if (json is null) {
+                SessionLogBuffer.Append("Auth status: leer");
+                return SessionState.Disconnected;
+            }
+
+            SessionLogBuffer.Append($"Auth status: authenticated={json.authenticated}, connected={json.connected}");
 
             if (!json.authenticated) return SessionState.NeedsLogin;
             if (json.authenticated && !json.connected) return SessionState.Connecting;
             if (json.authenticated && json.connected) return SessionState.Connected;
 
             return SessionState.Disconnected;
-        } catch {
+        } catch (Exception ex) {
+            SessionLogBuffer.Append($"Auth status Fehler: {ex.Message}");
             return SessionState.Disconnected;
         }
     }
 
     private async Task TickleAsync(HttpClient c, CancellationToken ct) {
         try {
-            await c.GetAsync("/v1/api/tickle", ct);
-        } catch {
-            // Fehler beim Heartbeat ignorieren, Loop probiert es erneut
+            var res = await c.GetAsync("/v1/api/tickle", ct);
+            SessionLogBuffer.Append($"Tickle: {(int)res.StatusCode}");
+        } catch (Exception ex) {
+            SessionLogBuffer.Append($"Tickle Fehler: {ex.Message}");
         }
     }
 
@@ -111,9 +157,12 @@ public class SessionManager : BackgroundService {
             var res = await c.GetAsync("/v1/api/iserver/accounts", ct);
             if (res.IsSuccessStatusCode) {
                 _state = SessionState.Connected;
+                SessionLogBuffer.Append("Accounts call → Connected");
+            } else {
+                SessionLogBuffer.Append($"Accounts call: {(int)res.StatusCode}");
             }
-        } catch {
-            // bleibt auf Connecting, bis es klappt
+        } catch (Exception ex) {
+            SessionLogBuffer.Append($"Accounts Fehler: {ex.Message}");
         }
     }
 
@@ -158,6 +207,4 @@ public class SessionManager : BackgroundService {
         public bool authenticated { get; set; }
         public bool connected { get; set; }
     }
-
-    // --- Hilfsfunktionen folgen ---
 }

@@ -1,42 +1,104 @@
 ﻿@page
 @model MyBase.Pages.Finance.IndexModel
 @{
-    ViewData["Title"] = "Finanzen";
+    ViewData["Title"] = "Finance Dashboard";
 }
 
-<div class="finance-page">
-    <h2>📊 Finanz-Dashboard</h2>
-    <p>Willkommen im Tradingbereich von MyBase. Hier findest du bald alle wichtigen Infos auf einen Blick.</p>
+<style>
+  .terminal {
+    background:#0b0b0b;
+    color:#b6ffb6;
+    font-family: ui-monospace, monospace;
+    font-size:13px;
+    line-height:1.35;
+    padding:12px;
+    border-radius:6px;
+    min-height:200px;
+    max-height:300px;
+    overflow-y:auto;
+    white-space:pre-wrap;
+  }
+</style>
 
-    <div class="dashboard-grid">
-
-        <!-- Marktübersicht (Platzhalter) -->
-        <div class="dashboard-card">
-            <div class="dashboard-icon">📈</div>
-            <div class="dashboard-title">Marktübersicht</div>
-            <p class="dashboard-description">DAX, NASDAQ, BTC, ETH …</p>
+<div class="container finance-page mt-4">
+  <div class="row g-3">
+    <div class="col-lg-6">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title mb-3">Gateway</h5>
+          <div id="gw-status" class="mb-2">Gateway-Status wird geladen…</div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-primary" onclick="gwStart()">Gateway Start</button>
+            <button class="btn btn-secondary" onclick="gwStop()">Gateway Stop</button>
+            <button class="btn btn-outline-light" onclick="gwRefresh()">Aktualisieren</button>
+          </div>
         </div>
-
-        <!-- Watchlist (Platzhalter) -->
-        <div class="dashboard-card">
-            <div class="dashboard-icon">📋</div>
-            <div class="dashboard-title">Watchlist</div>
-            <p class="dashboard-description">Beobachte deine Favoriten</p>
-        </div>
-
-        <!-- Depot (Platzhalter) -->
-        <div class="dashboard-card">
-            <div class="dashboard-icon">💼</div>
-            <div class="dashboard-title">Depot</div>
-            <p class="dashboard-description">Deine aktuellen Positionen</p>
-        </div>
-
-        <!-- Trading-Notizen (Platzhalter) -->
-        <div class="dashboard-card">
-            <div class="dashboard-icon">📝</div>
-            <div class="dashboard-title">Notizen</div>
-            <p class="dashboard-description">Trading-Journal & Ideen</p>
-        </div>
-
+      </div>
     </div>
+
+    <div class="col-lg-6">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title mb-3">Market Data</h5>
+          <div id="md-status" class="mb-2">Status wird geladen…</div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-success" onclick="mdStart()">Start Feed</button>
+            <button class="btn btn-secondary" onclick="mdStop()">Stop Feed</button>
+            <button class="btn btn-outline-light" onclick="mdRefresh()">Aktualisieren</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-3">
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title mb-3">Gateway Log</h5>
+          <div id="terminal" class="terminal">warte auf Log…</div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
+
+@section Scripts {
+    <script>
+      // -------- Gateway ----------
+      async function gwRefresh(){
+        const res = await fetch('/api/gateway/status');
+        const s = await res.json();
+        document.getElementById('gw-status').innerText =
+          `Desired: ${s.desired} | Session: ${s.session}`;
+      }
+      async function gwStart(){ await fetch('/api/gateway/start',{method:'POST'}); gwRefresh(); }
+      async function gwStop(){  await fetch('/api/gateway/stop',{method:'POST'});  gwRefresh(); }
+
+      // -------- Feed ----------
+      async function mdRefresh(){
+        const res = await fetch('/api/marketdata/status');
+        const s = await res.json();
+        document.getElementById('md-status').innerText =
+          `Desired: ${s.desired} | Session: ${s.session} | Feed: ${s.feed} | ` +
+          `Heartbeat: ${s.lastHeartbeatUtc ?? '-'} | LastBar: ${s.lastRealtimeBarUtc ?? '-'} ` +
+          (s.lastError ? `| Error: ${s.lastError}` : '');
+      }
+      async function mdStart(){ await fetch('/api/marketdata/start',{method:'POST'}); mdRefresh(); }
+      async function mdStop(){  await fetch('/api/marketdata/stop',{method:'POST'});  mdRefresh(); }
+
+      // -------- Terminal ----------
+      async function loadLog() {
+        const res = await fetch('/api/marketdata/log');
+        const txt = await res.text();
+        const term = document.getElementById("terminal");
+        term.textContent = txt || '— kein Log —';
+        term.scrollTop = term.scrollHeight;
+      }
+
+      gwRefresh(); mdRefresh(); loadLog();
+      setInterval(gwRefresh,5000);
+      setInterval(mdRefresh,5000);
+      setInterval(loadLog,3000);
+    </script>
+}

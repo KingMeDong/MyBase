@@ -7,14 +7,14 @@ namespace MyBase.Services.MarketData;
 /// <summary>
 /// Steuert den Marktdaten-Feed abhängig von DesiredState (AppSetting)
 /// und dem Session-Status (SessionManager). In diesem Schritt wird nur
-/// der Status in FeedState gepflegt (noch keine Kerzen).
+/// der Status in FeedState gepflegt (noch keine Kerzen/Subscriptions).
 /// </summary>
 public class MarketDataService : BackgroundService {
     private readonly IServiceProvider _sp;
     private readonly ILogger<MarketDataService> _log;
     private readonly SessionManager _session;
 
-    // interner Marker, ob der Feed "läuft" (Subscription später)
+    // interner Marker, ob der Feed "läuft"
     private bool _isRunning;
 
     public MarketDataService(IServiceProvider sp, ILogger<MarketDataService> log, SessionManager session) {
@@ -28,20 +28,20 @@ public class MarketDataService : BackgroundService {
             try {
                 var desired = await GetDesiredAsync(stop);
 
-                // Start-Bedingungen: gewünschter Zustand Running + Session verbunden
+                // Start-Bedingung: gewünschter Zustand Running + Session verbunden
                 if (desired == "Running" && _session.State == SessionState.Connected) {
                     if (!_isRunning) {
-                        await OnStartAsync();     // (hier später Subscriptions öffnen)
+                        await OnStartAsync();     // (hier später IB-Subscriptions öffnen)
                         await SetFeedStateAsync(FeedRunState.Running, null);
                         _isRunning = true;
                     }
                 } else {
                     if (_isRunning) {
-                        await OnStopAsync();      // (hier später Subscriptions schließen)
+                        await OnStopAsync();      // (hier später IB-Subscriptions schließen)
                         await SetFeedStateAsync(FeedRunState.Stopped, null);
                         _isRunning = false;
                     } else {
-                        // Falls Session Fehler meldet, spiegeln wir den Status optional
+                        // Session-Fehler spiegeln
                         if (_session.State == SessionState.Error)
                             await SetFeedStateAsync(FeedRunState.Error, "Session error");
                         else if (desired == "Stopped")
@@ -49,8 +49,7 @@ public class MarketDataService : BackgroundService {
                     }
                 }
 
-                // kleines, enges Polling – genügsam aber reaktiv
-                await Task.Delay(1000, stop);
+                await Task.Delay(1000, stop); // kleines, enges Polling
             } catch (OperationCanceledException) { /* normal beim Shutdown */ } catch (Exception ex) {
                 _log.LogError(ex, "MarketDataService Fehler");
                 await SetFeedStateAsync(FeedRunState.Error, ex.Message);
@@ -81,7 +80,7 @@ public class MarketDataService : BackgroundService {
         using var scope = _sp.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-        // In Schritt 1 nehmen wir "erstes aktives Instrument" (SPY)
+        // Schritt 1: erstes aktives Instrument (z. B. SPY)
         var inst = await db.Instruments.AsNoTracking()
             .Where(i => i.IsActive)
             .OrderBy(i => i.Id)
@@ -97,7 +96,7 @@ public class MarketDataService : BackgroundService {
         await db.SaveChangesAsync();
     }
 
-    // Diese Hooks nutzen wir im nächsten Schritt für echte Subscriptions/Bar-Builder
+    // Hooks: in Schritt 2 öffnen/schließen wir hier echte Subscriptions
     private Task OnStartAsync() {
         _log.LogInformation("MarketDataService starting (placeholder) — hier später IB-Subscriptions öffnen.");
         return Task.CompletedTask;
