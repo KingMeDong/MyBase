@@ -1,12 +1,15 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Net;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using MyBase.Data;
 using MyBase.Models;
+using MyBase.Models.Finance;
 using MyBase.Services;
+using MyBase.Services.MarketData;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// FileHelper initialisieren (für Pfade wie ImagesDirectory)
+// FileHelper initialisieren
 FileHelper.Initialize(builder.Configuration);
 
 // Maximale Requestgröße (Kestrel) aufheben
@@ -33,6 +36,35 @@ builder.Services.AddControllers();
 // Externe Clients
 builder.Services.AddHttpClient<MyBase.Clients.IoBrokerClient>();
 
+// CPAPI Options binden
+builder.Services.Configure<CpapiOptions>(builder.Configuration.GetSection("CPAPI"));
+
+// 🔹 Gemeinsamer Cookie-Container (wichtig für Session!)
+var cpapiCookies = new CookieContainer();
+builder.Services.AddSingleton(cpapiCookies);
+
+// HttpClient für CPAPI (Gateway)
+builder.Services.AddHttpClient("Cpapi", (sp, c) => {
+    var opt = sp.GetRequiredService<Microsoft.Extensions.Options.IOptionsMonitor<CpapiOptions>>().CurrentValue;
+    c.BaseAddress = new Uri(opt.BaseUrl);
+    c.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", "MyBaseBot/1.0");
+    c.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "application/json, text/plain, */*");
+    c.DefaultRequestHeaders.TryAddWithoutValidation("X-Requested-With", "XMLHttpRequest");
+})
+.ConfigurePrimaryHttpMessageHandler(sp => {
+    var cookies = sp.GetRequiredService<CookieContainer>();
+    return new HttpClientHandler {
+        CookieContainer = cookies,
+        UseCookies = true,
+        ServerCertificateCustomValidationCallback = (msg, cert, chain, errors) => true
+    };
+});
+
+// 🔹 Background-Services
+builder.Services.AddSingleton<SessionManager>(); // geteilter State
+builder.Services.AddHostedService(sp => sp.GetRequiredService<SessionManager>());
+builder.Services.AddHostedService<MarketDataService>();
+
 var app = builder.Build();
 
 // Fehlerseite/HSTS
@@ -46,8 +78,7 @@ app.UseHttpsRedirection();
 // Statische Dateien aus wwwroot
 app.UseStaticFiles();
 
-// 🔹 Statische Auslieferung der ORIGINAL-Bilder außerhalb von wwwroot
-//    -> /media/images/<dateiname> zeigt Datei aus FileHelper.ImagesDirectory
+// Statische Auslieferung der ORIGINAL-Bilder
 app.UseStaticFiles(new StaticFileOptions {
     FileProvider = new PhysicalFileProvider(FileHelper.ImagesDirectory),
     RequestPath = "/media/images"
@@ -55,7 +86,7 @@ app.UseStaticFiles(new StaticFileOptions {
 
 app.UseRouting();
 
-app.MapControllers();   // wichtig: aktiviert /download und /thumbs
+app.MapControllers();
 app.UseSession();
 app.UseAuthorization();
 
@@ -65,7 +96,7 @@ app.MapGet("/", context => {
     return Task.CompletedTask;
 });
 
-// (Bleibt: Dein Streaming-Endpunkt für Videos)
+// Media Streaming
 app.MapGet("/Media/Stream", async (HttpContext context) => {
     var pathParam = context.Request.Query["path"];
     var filePath = System.Net.WebUtility.UrlDecode(pathParam);
@@ -87,21 +118,20 @@ app.MapGet("/Media/Stream", async (HttpContext context) => {
         case ".webm": contentType = "video/webm"; break;
         case ".mkv": contentType = "video/x-matroska"; break;
         case ".avi": contentType = "video/x-msvideo"; break;
-        default: contentType = "application/octet-stream"; break;
     }
 
     context.Response.Headers.Add("Accept-Ranges", "bytes");
     context.Response.ContentType = contentType;
 
     if (context.Request.Headers.ContainsKey("Range")) {
-        var rangeHeader = context.Request.Headers["Range"].ToString(); // z.B. "bytes=0-999999"
+        var rangeHeader = context.Request.Headers["Range"].ToString();
         var range = rangeHeader.Replace("bytes=", "").Split('-');
         start = long.Parse(range[0]);
         if (range.Length > 1 && !string.IsNullOrEmpty(range[1])) {
             end = long.Parse(range[1]);
         }
 
-        context.Response.StatusCode = 206; // Partial Content
+        context.Response.StatusCode = 206;
         context.Response.Headers.Add("Content-Range", $"bytes {start}-{end}/{totalLength}");
     }
 
@@ -111,7 +141,7 @@ app.MapGet("/Media/Stream", async (HttpContext context) => {
     using var stream = System.IO.File.OpenRead(filePath);
     stream.Seek(start, SeekOrigin.Begin);
 
-    byte[] buffer = new byte[64 * 1024]; // 64 KB Buffer
+    byte[] buffer = new byte[64 * 1024];
     long remaining = contentLength;
 
     while (remaining > 0) {
@@ -123,6 +153,53 @@ app.MapGet("/Media/Stream", async (HttpContext context) => {
         remaining -= read;
     }
 });
+
+// 🔹 Minimal-APIs für Gateway
+app.MapPost("/api/gateway/start", async (AppDbContext db) => {
+    var e = await db.AppSettings.FindAsync("GatewayDesiredState");
+    if (e is null)
+        db.AppSettings.Add(new AppSetting { Key = "GatewayDesiredState", Value = "Running" });
+    else
+        e.Value = "Running";
+    await db.SaveChangesAsync();
+    return Results.Ok(new { ok = true, desired = "Running" });
+});
+
+app.MapPost("/api/gateway/stop", async (AppDbContext db) => {
+    var e = await db.AppSettings.FindAsync("GatewayDesiredState");
+    if (e is null)
+        db.AppSettings.Add(new AppSetting { Key = "GatewayDesiredState", Value = "Stopped" });
+    else
+        e.Value = "Stopped";
+    await db.SaveChangesAsync();
+    return Results.Ok(new { ok = true, desired = "Stopped" });
+});
+
+app.MapGet("/api/marketdata/status", async (AppDbContext db, SessionManager session) => {
+    var desired = (await db.AppSettings.FindAsync("MarketDataDesiredState"))?.Value ?? "Stopped";
+    var instId = await db.Instruments.Where(i => i.IsActive).Select(i => i.Id).OrderBy(i => i).FirstOrDefaultAsync();
+    var fs = instId == 0 ? null : await db.FeedStates.FindAsync(instId);
+
+    var dto = new MarketDataStatusDto(
+        desired,
+        session.State.ToString(),
+        (fs?.Status switch { 1 => "Running", 2 => "Error", _ => "Stopped" }),
+        fs?.LastHeartbeatUtc,
+        fs?.LastRealtimeTsUtc,
+        fs?.LastError
+    );
+    return Results.Ok(dto);
+});
+app.MapGet("/api/gateway/status", async (AppDbContext db, SessionManager session) => {
+    var gw = (await db.AppSettings.FindAsync("GatewayDesiredState"))?.Value ?? "Running";
+    return Results.Ok(new { desired = gw, session = session.State.ToString() });
+});
+// Rolling Log aus dem SessionManager holen
+app.MapGet("/api/marketdata/log", () => {
+    // SessionLogBuffer ist eine statische Utility-Klasse (siehe unten)
+    return Results.Text(SessionLogBuffer.ReadAll(), "text/plain");
+});
+
 
 app.MapRazorPages();
 app.Run();
