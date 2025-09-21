@@ -175,6 +175,32 @@ app.MapPost("/api/gateway/stop", async (AppDbContext db) => {
     return Results.Ok(new { ok = true, desired = "Stopped" });
 });
 
+// --- MARKETDATA START/STOP/STATUS ---
+app.MapPost("/api/marketdata/start", async (AppDbContext db) => {
+    var e = await db.AppSettings.FindAsync("MarketDataDesiredState");
+    if (e is null) db.AppSettings.Add(new AppSetting { Key = "MarketDataDesiredState", Value = "Running" });
+    else e.Value = "Running";
+    await db.SaveChangesAsync();
+
+    SessionLogBuffer.Append("CMD: MarketDataDesiredState -> Running (POST)");
+    return Results.Ok(new { ok = true, desired = "Running" });
+});
+
+
+
+app.MapPost("/api/marketdata/stop", async (AppDbContext db) => {
+    var e = await db.AppSettings.FindAsync("MarketDataDesiredState");
+    if (e is null) db.AppSettings.Add(new AppSetting { Key = "MarketDataDesiredState", Value = "Stopped" });
+    else e.Value = "Stopped";
+    await db.SaveChangesAsync();
+
+    SessionLogBuffer.Append("CMD: MarketDataDesiredState -> Stopped (POST)");
+    return Results.Ok(new { ok = true, desired = "Stopped" });
+});
+
+
+
+
 app.MapGet("/api/marketdata/status", async (AppDbContext db, SessionManager session) => {
     var desired = (await db.AppSettings.FindAsync("MarketDataDesiredState"))?.Value ?? "Stopped";
     var instId = await db.Instruments.Where(i => i.IsActive).Select(i => i.Id).OrderBy(i => i).FirstOrDefaultAsync();
