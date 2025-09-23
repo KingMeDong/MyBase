@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Threading.Channels;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using MyBase.Data;
@@ -12,12 +13,12 @@ var builder = WebApplication.CreateBuilder(args);
 // FileHelper initialisieren
 FileHelper.Initialize(builder.Configuration);
 
-// Maximale Requestgröße (Kestrel) aufheben
+// Kestrel-Limits
 builder.WebHost.ConfigureKestrel(k => {
     k.Limits.MaxRequestBodySize = null;
 });
 
-// Konfiguration laden
+// Konfiguration
 builder.Configuration
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
     .AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
@@ -60,10 +61,16 @@ builder.Services.AddHttpClient("Cpapi", (sp, c) => {
     };
 });
 
-// 🔹 Background-Services
-builder.Services.AddSingleton<SessionManager>(); // geteilter State
+// 🔹 Background-Services (bestehend)
+builder.Services.AddSingleton<SessionManager>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<SessionManager>());
 builder.Services.AddHostedService<MarketDataService>();
+
+// 🔹 Backfill-Infrastruktur (NEU)
+builder.Services.AddSingleton(Channel.CreateUnbounded<BackfillRequest>(
+    new UnboundedChannelOptions { SingleReader = true, SingleWriter = false }));
+builder.Services.AddSingleton<BackfillStatusStore>();
+builder.Services.AddHostedService<BackfillWorker>();
 
 var app = builder.Build();
 
@@ -75,7 +82,7 @@ if (!app.Environment.IsDevelopment()) {
 
 app.UseHttpsRedirection();
 
-// Statische Dateien aus wwwroot
+// Statische Dateien
 app.UseStaticFiles();
 
 // Statische Auslieferung der ORIGINAL-Bilder
@@ -90,7 +97,7 @@ app.MapControllers();
 app.UseSession();
 app.UseAuthorization();
 
-// Root auf Login umleiten
+// Root -> Login
 app.MapGet("/", context => {
     context.Response.Redirect("/Account/Login");
     return Task.CompletedTask;
@@ -154,7 +161,7 @@ app.MapGet("/Media/Stream", async (HttpContext context) => {
     }
 });
 
-// 🔹 Minimal-APIs für Gateway
+// --- GATEWAY ---
 app.MapPost("/api/gateway/start", async (AppDbContext db) => {
     var e = await db.AppSettings.FindAsync("GatewayDesiredState");
     if (e is null)
@@ -175,7 +182,12 @@ app.MapPost("/api/gateway/stop", async (AppDbContext db) => {
     return Results.Ok(new { ok = true, desired = "Stopped" });
 });
 
-// --- MARKETDATA START/STOP/STATUS ---
+app.MapGet("/api/gateway/status", async (AppDbContext db, SessionManager session) => {
+    var gw = (await db.AppSettings.FindAsync("GatewayDesiredState"))?.Value ?? "Running";
+    return Results.Ok(new { desired = gw, session = session.State.ToString() });
+});
+
+// --- MARKETDATA ---
 app.MapPost("/api/marketdata/start", async (AppDbContext db) => {
     var e = await db.AppSettings.FindAsync("MarketDataDesiredState");
     if (e is null) db.AppSettings.Add(new AppSetting { Key = "MarketDataDesiredState", Value = "Running" });
@@ -186,8 +198,6 @@ app.MapPost("/api/marketdata/start", async (AppDbContext db) => {
     return Results.Ok(new { ok = true, desired = "Running" });
 });
 
-
-
 app.MapPost("/api/marketdata/stop", async (AppDbContext db) => {
     var e = await db.AppSettings.FindAsync("MarketDataDesiredState");
     if (e is null) db.AppSettings.Add(new AppSetting { Key = "MarketDataDesiredState", Value = "Stopped" });
@@ -197,9 +207,6 @@ app.MapPost("/api/marketdata/stop", async (AppDbContext db) => {
     SessionLogBuffer.Append("CMD: MarketDataDesiredState -> Stopped (POST)");
     return Results.Ok(new { ok = true, desired = "Stopped" });
 });
-
-
-
 
 app.MapGet("/api/marketdata/status", async (AppDbContext db, SessionManager session) => {
     var desired = (await db.AppSettings.FindAsync("MarketDataDesiredState"))?.Value ?? "Stopped";
@@ -216,16 +223,96 @@ app.MapGet("/api/marketdata/status", async (AppDbContext db, SessionManager sess
     );
     return Results.Ok(dto);
 });
-app.MapGet("/api/gateway/status", async (AppDbContext db, SessionManager session) => {
-    var gw = (await db.AppSettings.FindAsync("GatewayDesiredState"))?.Value ?? "Running";
-    return Results.Ok(new { desired = gw, session = session.State.ToString() });
-});
-// Rolling Log aus dem SessionManager holen
-app.MapGet("/api/marketdata/log", () => {
-    // SessionLogBuffer ist eine statische Utility-Klasse (siehe unten)
-    return Results.Text(SessionLogBuffer.ReadAll(), "text/plain");
+
+// Rolling Log fürs Terminal
+app.MapGet("/api/marketdata/log", () => Results.Text(SessionLogBuffer.ReadAll(), "text/plain"));
+
+// --- BACKFILL (ZEITRAUMFÄHIG) ---
+app.MapPost("/api/backfill/start", async (IServiceProvider sp, Channel<BackfillRequest> queue, BackfillApiContracts.BackfillStartDto? body) => {
+    using var scope = sp.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+    // Instrument bestimmen (Standard: erstes aktives)
+    var instQuery = db.Instruments.AsNoTracking().Where(i => i.IsActive);
+    if (body?.InstrumentId is int iid) instQuery = db.Instruments.AsNoTracking().Where(i => i.Id == iid);
+
+    var inst = await instQuery.OrderBy(i => i.Id).FirstOrDefaultAsync();
+    if (inst == null) {
+        SessionLogBuffer.Append("CMD: Backfill abgebrochen – kein (aktives) Instrument gefunden.");
+        return Results.BadRequest(new { error = "No instrument" });
+    }
+
+    var nowUtc = DateTime.UtcNow;
+    var endDefault = BackfillApiContracts.FloorToMinuteUtc(nowUtc).AddMinutes(-5); // vermeidet Clash mit Realtime
+    var months = body?.Months ?? 6;
+    var startDefault = nowUtc.AddMonths(-months);
+
+    var start = body?.StartUtc ?? startDefault;
+    var end = body?.EndUtc ?? endDefault;
+    var rth = body?.RthOnly ?? true;
+
+    if (end <= start) {
+        SessionLogBuffer.Append("CMD: Backfill abgebrochen – ungültiger Zeitraum (End <= Start).");
+        return Results.BadRequest(new { error = "Invalid range" });
+    }
+
+    var req = new BackfillRequest {
+        InstrumentId = inst.Id,
+        StartUtc = DateTime.SpecifyKind(start, DateTimeKind.Utc),
+        EndUtc = DateTime.SpecifyKind(end, DateTimeKind.Utc),
+        RthOnly = rth,
+        Source = "backfill"
+    };
+
+    if (!queue.Writer.TryWrite(req)) {
+        SessionLogBuffer.Append("CMD: Backfill konnte nicht gequeued werden (Queue voll?).");
+        return Results.StatusCode(503);
+    }
+
+    SessionLogBuffer.Append($"CMD: Backfill queued (JobId={req.JobId}, {inst.Symbol}, {req.StartUtc:u} → {req.EndUtc:u}, RTH={(rth ? "true" : "false")}).");
+    return Results.Accepted($"/api/backfill/status/{req.JobId}", new { jobId = req.JobId });
 });
 
+app.MapGet("/api/backfill/status/{id:guid}", (BackfillStatusStore store, Guid id) => {
+    var st = store.Get(id);
+    if (st is null) return Results.NotFound();
+
+    return Results.Ok(new {
+        st.JobId,
+        st.State,
+        st.SegmentsPlanned,
+        st.SegmentsDone,
+        st.Inserted,
+        st.Upserts,
+        st.Error,
+        st.InstrumentId,
+        st.InstrumentSymbol,
+        st.StartUtc,
+        st.EndUtc,
+        st.RthOnly,
+        st.Source,
+        st.CreatedUtc,
+        st.FinishedUtc
+    });
+});
 
 app.MapRazorPages();
 app.Run();
+
+
+// ========== ALLE Typen/Helper NACH den Top-Level-Statements! ==========
+namespace MyBase.Services.MarketData {
+    /// <summary>DTO für /api/backfill/start (Zeitraum/Optionen)</summary>
+    public static class BackfillApiContracts {
+        public record BackfillStartDto(
+            int? InstrumentId,
+            DateTime? StartUtc,
+            DateTime? EndUtc,
+            int? Months,
+            bool? RthOnly
+        );
+
+        public static DateTime FloorToMinuteUtc(DateTime dtUtc) =>
+            new DateTime(dtUtc.Year, dtUtc.Month, dtUtc.Day, dtUtc.Hour, dtUtc.Minute, 0, DateTimeKind.Utc);
+    }
+}

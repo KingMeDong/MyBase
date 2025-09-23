@@ -4,101 +4,189 @@
     ViewData["Title"] = "Finance Dashboard";
 }
 
-<style>
-    .terminal {
-      background:#0b0b0b;
-      color:#b6ffb6;
-      font-family: ui-monospace, monospace;
-      font-size:13px;
-      line-height:1.35;
-      padding:12px;
-      border-radius:6px;
-      min-height:200px;
-      max-height:300px;
-      overflow-y:auto;
-      white-space:pre-wrap;
-    }
-</style>
 
-<div class="container finance-page mt-4">
-    <div class="row g-3">
-        <div class="col-lg-6">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title mb-3">Gateway</h5>
-                    <div id="gw-status" class="mb-2">Gateway-Status wird geladen…</div>
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-primary" onclick="gwStart()">Gateway Start</button>
-                        <button class="btn btn-secondary" onclick="gwStop()">Gateway Stop</button>
-                        <button class="btn btn-outline-light" onclick="gwRefresh()">Aktualisieren</button>
-                    </div>
+<div class="container my-3">
+
+    <h3 class="mb-3">Market Data Dashboard</h3>
+
+    <!-- Status-Zeilen -->
+    <div class="row g-3 mb-3">
+        <div class="col-md-6">
+            <div class="card p-3">
+                <h5>Gateway</h5>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-success" onclick="post('/api/gateway/start')">Start</button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="post('/api/gateway/stop')">Stop</button>
+                    <button class="btn btn-sm btn-secondary" onclick="refreshGateway()">Status</button>
                 </div>
+                <div id="gwStatus" class="mt-2 text-muted">–</div>
             </div>
         </div>
 
-        <div class="col-lg-6">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title mb-3">Market Data</h5>
-                    <div id="md-status" class="mb-2">Status wird geladen…</div>
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-success" onclick="mdStart()">Start Feed</button>
-                        <button class="btn btn-secondary" onclick="mdStop()">Stop Feed</button>
-                        <button class="btn btn-outline-light" onclick="mdRefresh()">Aktualisieren</button>
-                    </div>
+        <div class="col-md-6">
+            <div class="card p-3">
+                <h5>Realtime Feed</h5>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-success" onclick="post('/api/marketdata/start')">Start Feed</button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="post('/api/marketdata/stop')">Stop Feed</button>
+                    <button class="btn btn-sm btn-secondary" onclick="refreshFeed()">Status</button>
                 </div>
+                <div id="feedStatus" class="mt-2 text-muted">–</div>
             </div>
         </div>
     </div>
 
-    <div class="row mt-3">
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title mb-3">Gateway Log</h5>
-                    <div id="terminal" class="terminal">warte auf Log…</div>
+    <!-- Backfill-Block -->
+    <div class="card p-3 mb-3">
+        <h5>Historische Daten (Backfill)</h5>
+
+        <div class="d-flex flex-wrap align-items-end gap-3">
+            <div>
+                <label class="form-label d-block">
+                    <input type="radio" name="bfRangeMode" value="months" checked>
+                    Letzte X Monate
+                </label>
+                <input id="bfMonths" type="number" value="6" min="1" max="36" class="form-control" style="width: 120px;">
+            </div>
+
+            <div>
+                <label class="form-label d-block">
+                    <input type="radio" name="bfRangeMode" value="custom">
+                    Von/Bis (UTC)
+                </label>
+                <div class="d-flex align-items-center gap-2">
+                    <input id="bfStartUtc" type="datetime-local" step="60" class="form-control" style="min-width:220px;">
+                    <span>bis</span>
+                    <input id="bfEndUtc" type="datetime-local" step="60" class="form-control" style="min-width:220px;">
                 </div>
             </div>
+
+            <div class="form-check">
+                <input id="bfRthOnly" class="form-check-input" type="checkbox" checked>
+                <label class="form-check-label">RTH-only <small class="text-muted">(RTH = 09:30–16:00 New York)</small></label>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button id="btnBackfill" class="btn btn-primary" onclick="startBackfill()">Historie laden</button>
+                <button id="btnBackfillCancel" class="btn btn-outline-secondary" onclick="cancelBackfill()" disabled>Abbrechen</button>
+            </div>
+
+            <div id="bfStatus" class="text-muted"></div>
         </div>
+    </div>
+
+    <!-- Terminal -->
+    <div class="card p-3">
+        <h5>Gateway Log</h5>
+        <pre id="term" style="height: 280px; overflow:auto; background:#111; color:#ddd; padding:12px; border-radius:6px;"></pre>
     </div>
 </div>
 
-@section Scripts {
-    <script>
-        // -------- Gateway ----------
-        async function gwRefresh(){
-          const res = await fetch('/api/gateway/status');
-          const s = await res.json();
-          document.getElementById('gw-status').innerText =
-            `Desired: ${s.desired} | Session: ${s.session}`;
-        }
-        async function gwStart(){ await fetch('/api/gateway/start',{method:'POST'}); gwRefresh(); }
-        async function gwStop(){  await fetch('/api/gateway/stop',{method:'POST'});  gwRefresh(); }
+<script>
+    async function post(url){
+      try{
+        const r=await fetch(url,{method:'POST'});
+        if(!r.ok){alert('Fehler: '+(await r.text()));return;}
+        refreshGateway(); refreshFeed();
+      }catch(e){alert('Netzfehler: '+e);}
+    }
 
-        // -------- Feed ----------
-        async function mdRefresh(){
-          const res = await fetch('/api/marketdata/status');
-          const s = await res.json();
-          document.getElementById('md-status').innerText =
-            `Desired: ${s.desired} | Session: ${s.session} | Feed: ${s.feed} | ` +
-            `Heartbeat: ${s.lastHeartbeatUtc ?? '-'} | LastBar: ${s.lastRealtimeBarUtc ?? '-'} ` +
-            (s.lastError ? `| Error: ${s.lastError}` : '');
-        }
-        async function mdStart(){ await fetch('/api/marketdata/start',{method:'POST'}); mdRefresh(); }
-        async function mdStop(){  await fetch('/api/marketdata/stop',{method:'POST'});  mdRefresh(); }
+    async function refreshGateway(){
+      try{
+        const r=await fetch('/api/gateway/status'); if(!r.ok) return;
+        const j=await r.json();
+        document.getElementById('gwStatus').textContent = `Desired=${j.desired} | Session=${j.session}`;
+      }catch{}
+    }
 
-        // -------- Terminal ----------
-        async function loadLog() {
-          const res = await fetch('/api/marketdata/log');
-          const txt = await res.text();
-          const term = document.getElementById("terminal");
-          term.textContent = txt || '— kein Log —';
-          term.scrollTop = term.scrollHeight;
-        }
+    async function refreshFeed(){
+      try{
+        const r=await fetch('/api/marketdata/status'); if(!r.ok) return;
+        const j=await r.json();
+        const hb = j.heartbeatUtc ? ` | HB=${j.heartbeatUtc}` : '';
+        const rt = j.lastRealtimeTsUtc ? ` | LastBar=${j.lastRealtimeTsUtc}` : '';
+        const err = j.lastError ? ` | Err=${j.lastError}` : '';
+        document.getElementById('feedStatus').textContent =
+          `Desired=${j.desired} | Session=${j.session} | Feed=${j.feed}${hb}${rt}${err}`;
+      }catch{}
+    }
 
-        gwRefresh(); mdRefresh(); loadLog();
-        setInterval(gwRefresh,5000);
-        setInterval(mdRefresh,5000);
-        setInterval(loadLog,3000);
-    </script>
-}
+    // ===== Terminal (pollt /api/marketdata/log) =====
+    async function pollLog(){
+      try{
+        const r=await fetch('/api/marketdata/log');
+        if(!r.ok) return;
+        const t=await r.text();
+        const el=document.getElementById('term');
+        const atBottom = Math.abs(el.scrollHeight - el.scrollTop - el.clientHeight) < 5;
+        el.textContent=t;
+        if(atBottom) el.scrollTop = el.scrollHeight;
+      }catch{}
+      setTimeout(pollLog, 1000);
+    }
+    pollLog(); refreshGateway(); refreshFeed();
+
+    // ===== Backfill-Button =====
+    let bfPollTimer=null, bfCurrentJob=null;
+
+    // (Konvertiert datetime-local (lokal) in ISO-UTC, damit der Server es eindeutig versteht)
+    function toIsoUtc(inp){
+      const v=inp.value; if(!v) return null;
+      const local=new Date(v);
+      if(isNaN(local.getTime())) return null;
+      return new Date(local.getTime()-local.getTimezoneOffset()*60000)
+        .toISOString().replace(/\.\d{3}Z$/,'Z');
+    }
+
+    function setBusy(busy,text){
+      document.getElementById('btnBackfill').disabled=!!busy;
+      document.getElementById('btnBackfillCancel').disabled=!!busy;
+      document.getElementById('bfStatus').textContent=text||'';
+    }
+
+    async function startBackfill(){
+      clearTimeout(bfPollTimer); bfCurrentJob=null;
+
+      const mode=document.querySelector('input[name="bfRangeMode"]:checked').value;
+      const months=parseInt(document.getElementById('bfMonths').value||'6',10);
+      const s=toIsoUtc(document.getElementById('bfStartUtc'));
+      const e=toIsoUtc(document.getElementById('bfEndUtc'));
+      const rth=document.getElementById('bfRthOnly').checked;
+
+      const payload={ RthOnly:rth };
+      if(mode==='months'){ payload.Months=isFinite(months)&&months>0?months:6; }
+      else { if(!s||!e){ alert('Bitte gültige Von/Bis-Werte (UTC) angeben.'); return; }
+             payload.StartUtc=s; payload.EndUtc=e; }
+
+      setBusy(true,'Sende Backfill-Request …');
+
+      try{
+        const res=await fetch('/api/backfill/start',{
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body:JSON.stringify(payload)
+        });
+        if(!(res.status===202||res.status===200)){
+          setBusy(false,'Fehler: '+await res.text()); return;
+        }
+        const data=await res.json(); bfCurrentJob=data.jobId;
+        setBusy(true,'Backfill gestartet: '+bfCurrentJob);
+        pollBackfillStatus();
+      }catch(err){ setBusy(false,'Fehler: '+err); }
+    }
+
+    async function pollBackfillStatus(){
+      if(!bfCurrentJob){ setBusy(false,'Kein Job.'); return; }
+      try{
+        const r=await fetch('/api/backfill/status/'+bfCurrentJob);
+        if(!r.ok){ setBusy(false,'Status nicht verfügbar'); return; }
+        const st=await r.json();
+        const text=`Job ${st.jobId} — ${st.state} — Segmente ${st.segmentsDone}/${st.segmentsPlanned}`
+          +(st.inserted||st.upserts?` — geschrieben: +${st.inserted} / ~${st.upserts} upd`:``);
+        const done=(st.state!=='Queued' && st.state!=='Running');
+        setBusy(!done,text);
+        if(!done) bfPollTimer=setTimeout(pollBackfillStatus,1000);
+      }catch{ bfPollTimer=setTimeout(pollBackfillStatus,1500); }
+    }
+
+    function cancelBackfill(){ alert('Cancel ist (noch) nicht implementiert.'); }
+</script>

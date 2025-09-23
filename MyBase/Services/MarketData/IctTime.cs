@@ -8,6 +8,8 @@ namespace MyBase.Services.MarketData;
 /// </summary>
 public static class IctTime {
     private static readonly TimeZoneInfo NyTz = ResolveNyTimeZone();
+    public static byte GetSession(DateTime ny) => SessionOf(ny);
+    public static byte GetKillzone(DateTime ny) => KillzoneOf(ny);
 
     private static TimeZoneInfo ResolveNyTimeZone() {
         // (1) Windows-Name
