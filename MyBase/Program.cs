@@ -1,7 +1,9 @@
 ﻿using System.Net;
 using System.Threading.Channels;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Hosting; // IHostApplicationLifetime
 using MyBase.Data;
 using MyBase.Models;
 using MyBase.Models.Finance;
@@ -12,6 +14,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 // FileHelper initialisieren
 FileHelper.Initialize(builder.Configuration);
+
+// 🔹 SessionLogBuffer (Datei-Logging) initialisieren
+SessionLogBuffer.Configure(builder.Configuration);
 
 // Kestrel-Limits
 builder.WebHost.ConfigureKestrel(k => {
@@ -26,8 +31,10 @@ builder.Configuration
 // Services
 builder.Services.AddRazorPages();
 builder.Services.AddSession();
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 builder.Services.AddHostedService<ReminderService>();
 
@@ -61,18 +68,50 @@ builder.Services.AddHttpClient("Cpapi", (sp, c) => {
     };
 });
 
-// 🔹 Background-Services (bestehend)
+// 🔹 Background-Services
 builder.Services.AddSingleton<SessionManager>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<SessionManager>());
 builder.Services.AddHostedService<MarketDataService>();
 
-// 🔹 Backfill-Infrastruktur (NEU)
+// 🔹 Backfill-Infrastruktur
 builder.Services.AddSingleton(Channel.CreateUnbounded<BackfillRequest>(
     new UnboundedChannelOptions { SingleReader = true, SingleWriter = false }));
 builder.Services.AddSingleton<BackfillStatusStore>();
 builder.Services.AddHostedService<BackfillWorker>();
 
 var app = builder.Build();
+
+// Host-Lebenszyklus + sauberes Beenden loggen
+var lifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
+
+lifetime.ApplicationStarted.Register(() => {
+    SessionLogBuffer.Info("HOST", "STARTED", "ApplicationStarted");
+});
+
+lifetime.ApplicationStopping.Register(() => {
+    // erst loggen, dann Writer stoppen
+    SessionLogBuffer.Warn("HOST", "STOPPING", "ApplicationStopping");
+    SessionLogBuffer.Stop();
+});
+
+// Optional: globale Crash-Hooks (oben in Program.cs, vor app.Run)
+AppDomain.CurrentDomain.UnhandledException += (s, e) => {
+    var ex = e.ExceptionObject as Exception;
+    SessionLogBuffer.Error("HOST", "UNHANDLED", "AppDomain exception",
+        ("isTerminating", e.IsTerminating), ("err", ex?.Message ?? e.ExceptionObject.ToString()));
+};
+
+TaskScheduler.UnobservedTaskException += (s, e) => {
+    e.SetObserved();
+    SessionLogBuffer.Error("HOST", "UNOBSERVED_TASK", "TaskScheduler exception",
+        ("err", e.Exception?.Message));
+};
+
+AppDomain.CurrentDomain.ProcessExit += (s, e) => {
+    SessionLogBuffer.Warn("HOST", "PROCESS_EXIT", "ProcessExit");
+    SessionLogBuffer.Stop();
+};
+
 
 // Fehlerseite/HSTS
 if (!app.Environment.IsDevelopment()) {
@@ -208,20 +247,70 @@ app.MapPost("/api/marketdata/stop", async (AppDbContext db) => {
     return Results.Ok(new { ok = true, desired = "Stopped" });
 });
 
+// ✅ Computed Feed Status (Running/Idle/Waiting/Stopped)
 app.MapGet("/api/marketdata/status", async (AppDbContext db, SessionManager session) => {
+    // Feed-Desired (Realtime)
     var desired = (await db.AppSettings.FindAsync("MarketDataDesiredState"))?.Value ?? "Stopped";
-    var instId = await db.Instruments.Where(i => i.IsActive).Select(i => i.Id).OrderBy(i => i).FirstOrDefaultAsync();
+
+    // Gateway-Desired (für Anzeige im UI)
+    var gatewayDesired = (await db.AppSettings.FindAsync("GatewayDesiredState"))?.Value ?? "Running";
+
+    var instId = await db.Instruments.AsNoTracking()
+        .Where(i => i.IsActive)
+        .OrderBy(i => i.Id)
+        .Select(i => i.Id)
+        .FirstOrDefaultAsync();
+
     var fs = instId == 0 ? null : await db.FeedStates.FindAsync(instId);
 
-    var dto = new MarketDataStatusDto(
-        desired,
-        session.State.ToString(),
-        (fs?.Status switch { 1 => "Running", 2 => "Error", _ => "Stopped" }),
-        fs?.LastHeartbeatUtc,
-        fs?.LastRealtimeTsUtc,
-        fs?.LastError
-    );
-    return Results.Ok(dto);
+    DateTime utcNow = DateTime.UtcNow;
+    int? rtAge = null, hbAge = null;
+
+    if (fs?.LastRealtimeTsUtc is DateTime rtu) rtAge = (int)Math.Round((utcNow - rtu).TotalSeconds);
+    if (fs?.LastHeartbeatUtc is DateTime hbu) hbAge = (int)Math.Round((utcNow - hbu).TotalSeconds);
+
+    string feedComputed;
+    var desiredRunning = string.Equals(desired, "Running", StringComparison.OrdinalIgnoreCase);
+    var sessionConnected = session.State == SessionState.Connected;
+
+    if (!desiredRunning)
+        feedComputed = "Stopped";
+    else if (!sessionConnected)
+        feedComputed = "Waiting (session)";
+    else if (rtAge.HasValue && rtAge.Value <= 120)
+        feedComputed = "Running";
+    else if (hbAge.HasValue && hbAge.Value <= 45)
+        feedComputed = "Idle";
+    else
+        feedComputed = "Stopped";
+
+    // Rückgabe: neue UND alte Feldnamen (für volle Kompatibilität)
+    return Results.Ok(new {
+        // Gateway
+        gatewayDesired,
+
+        // Realtime-Feed (Wunschzustand)
+        desired,                // (alter Name bleibt erhalten)
+        feedDesired = desired,  // (sprechender Alias)
+
+        // Session + berechneter Feed-Status
+        session = session.State.ToString(),
+        feed = feedComputed,
+
+        // Zeitstempel (neu)
+        heartbeat = fs?.LastHeartbeatUtc,
+        realtime = fs?.LastRealtimeTsUtc,
+        error = fs?.LastError,
+
+        // Zeitstempel (alt – Backwards-Compatibility)
+        lastHeartbeatUtc = fs?.LastHeartbeatUtc,
+        lastRealtimeBarUtc = fs?.LastRealtimeTsUtc,
+        lastError = fs?.LastError,
+
+        // optionale Alterswerte in Sekunden
+        heartbeatAgeSec = hbAge,
+        realtimeAgeSec = rtAge
+    });
 });
 
 // Rolling Log fürs Terminal
@@ -273,6 +362,48 @@ app.MapPost("/api/backfill/start", async (IServiceProvider sp, Channel<BackfillR
     return Results.Accepted($"/api/backfill/status/{req.JobId}", new { jobId = req.JobId });
 });
 
+// --- BACKFILL (SHORTCUT 1 WOCHE) ---
+app.MapPost("/api/backfill/start/1w", async (IServiceProvider sp, Channel<BackfillRequest> queue, BackfillApiContracts.BackfillStartDto? body) => {
+    using var scope = sp.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+    var instQuery = db.Instruments.AsNoTracking().Where(i => i.IsActive);
+    if (body?.InstrumentId is int iid) instQuery = db.Instruments.AsNoTracking().Where(i => i.Id == iid);
+
+    var inst = await instQuery.OrderBy(i => i.Id).FirstOrDefaultAsync();
+    if (inst == null) {
+        SessionLogBuffer.Append("CMD: Backfill(1w) abgebrochen – kein (aktives) Instrument gefunden.");
+        return Results.BadRequest(new { error = "No instrument" });
+    }
+
+    var nowUtc = DateTime.UtcNow;
+    var endUtc = BackfillApiContracts.FloorToMinuteUtc(nowUtc).AddMinutes(-5);
+    var startUtc = endUtc.AddDays(-7);
+
+    var rth = body?.RthOnly ?? true;
+
+    if (endUtc <= startUtc) {
+        SessionLogBuffer.Append("CMD: Backfill(1w) abgebrochen – ungültiger Zeitraum (End <= Start).");
+        return Results.BadRequest(new { error = "Invalid range" });
+    }
+
+    var req = new BackfillRequest {
+        InstrumentId = inst.Id,
+        StartUtc = DateTime.SpecifyKind(startUtc, DateTimeKind.Utc),
+        EndUtc = DateTime.SpecifyKind(endUtc, DateTimeKind.Utc),
+        RthOnly = rth,
+        Source = "backfill"
+    };
+
+    if (!queue.Writer.TryWrite(req)) {
+        SessionLogBuffer.Append("CMD: Backfill(1w) konnte nicht gequeued werden (Queue voll?).");
+        return Results.StatusCode(503);
+    }
+
+    SessionLogBuffer.Append($"CMD: Backfill(1w) queued (JobId={req.JobId}, {inst.Symbol}, {req.StartUtc:u} → {req.EndUtc:u}, RTH={(rth ? "true" : "false")}).");
+    return Results.Accepted($"/api/backfill/status/{req.JobId}", new { jobId = req.JobId });
+});
+
 app.MapGet("/api/backfill/status/{id:guid}", (BackfillStatusStore store, Guid id) => {
     var st = store.Get(id);
     if (st is null) return Results.NotFound();
@@ -297,6 +428,31 @@ app.MapGet("/api/backfill/status/{id:guid}", (BackfillStatusStore store, Guid id
 });
 
 app.MapRazorPages();
+
+// 🔸 Globale Exception-Hooks (Prozessweite Fehler sichtbar machen)
+AppDomain.CurrentDomain.UnhandledException += (s, e) => {
+    var ex = e.ExceptionObject as Exception;
+    SessionLogBuffer.Error("HOST", "UNHANDLED",
+        "AppDomain exception",
+        ("isTerminating", e.IsTerminating),
+        ("err", ex?.Message ?? e.ExceptionObject.ToString()));
+};
+
+TaskScheduler.UnobservedTaskException += (s, e) => {
+    // Verhindert, dass der Prozess unerwartet terminiert (je nach Host-Policy)
+    e.SetObserved();
+    SessionLogBuffer.Error("HOST", "UNOBSERVED_TASK",
+        "TaskScheduler exception",
+        ("err", e.Exception?.Message));
+};
+
+// (Optional) Wird bei "harten" Beendigungen gefeuert
+AppDomain.CurrentDomain.ProcessExit += (s, e) => {
+    SessionLogBuffer.Warn("HOST", "PROCESS_EXIT", "ProcessExit");
+    SessionLogBuffer.Stop();
+};
+
+
 app.Run();
 
 

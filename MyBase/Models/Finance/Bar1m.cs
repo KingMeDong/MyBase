@@ -22,6 +22,12 @@ public class Bar1m {
     public byte Session { get; set; }     // 0=ETH, 1=RTH
     public byte Killzone { get; set; }    // 0=none, 1=London AM, 2=NY AM, 3=NY PM
 
+
+    public decimal? SpreadAvg { get; set; }
+    public decimal? SpreadMax { get; set; }
+    public bool GapFlag { get; set; } = false;
+
+
     [MaxLength(20)]
     public string IngestSource { get; set; } = "realtime";
 

@@ -1,192 +1,294 @@
 ﻿@page
 @model MyBase.Pages.Finance.IndexModel
 @{
-    ViewData["Title"] = "Finance Dashboard";
+    ViewData["Title"] = "Finance";
 }
 
+<div class="container finance-page" style="max-width:1200px; margin:auto">
 
-<div class="container my-3">
+  <!-- Steuerung: Gateway / Realtime -->
+  <div class="grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
 
-    <h3 class="mb-3">Market Data Dashboard</h3>
-
-    <!-- Status-Zeilen -->
-    <div class="row g-3 mb-3">
-        <div class="col-md-6">
-            <div class="card p-3">
-                <h5>Gateway</h5>
-                <div class="d-flex gap-2">
-                    <button class="btn btn-sm btn-success" onclick="post('/api/gateway/start')">Start</button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="post('/api/gateway/stop')">Stop</button>
-                    <button class="btn btn-sm btn-secondary" onclick="refreshGateway()">Status</button>
-                </div>
-                <div id="gwStatus" class="mt-2 text-muted">–</div>
-            </div>
+    <!-- Gateway -->
+    <div class="card">
+      <div class="card-header">Gateway</div>
+      <div class="card-body">
+        <div class="btn-group" role="group">
+          <button class="btn btn-success" onclick="startGateway()">Start</button>
+          <button class="btn btn-danger"  onclick="stopGateway()">Stop</button>
         </div>
-
-        <div class="col-md-6">
-            <div class="card p-3">
-                <h5>Realtime Feed</h5>
-                <div class="d-flex gap-2">
-                    <button class="btn btn-sm btn-success" onclick="post('/api/marketdata/start')">Start Feed</button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="post('/api/marketdata/stop')">Stop Feed</button>
-                    <button class="btn btn-sm btn-secondary" onclick="refreshFeed()">Status</button>
-                </div>
-                <div id="feedStatus" class="mt-2 text-muted">–</div>
-            </div>
-        </div>
+      </div>
     </div>
 
-    <!-- Backfill-Block -->
-    <div class="card p-3 mb-3">
-        <h5>Historische Daten (Backfill)</h5>
-
-        <div class="d-flex flex-wrap align-items-end gap-3">
-            <div>
-                <label class="form-label d-block">
-                    <input type="radio" name="bfRangeMode" value="months" checked>
-                    Letzte X Monate
-                </label>
-                <input id="bfMonths" type="number" value="6" min="1" max="36" class="form-control" style="width: 120px;">
-            </div>
-
-            <div>
-                <label class="form-label d-block">
-                    <input type="radio" name="bfRangeMode" value="custom">
-                    Von/Bis (UTC)
-                </label>
-                <div class="d-flex align-items-center gap-2">
-                    <input id="bfStartUtc" type="datetime-local" step="60" class="form-control" style="min-width:220px;">
-                    <span>bis</span>
-                    <input id="bfEndUtc" type="datetime-local" step="60" class="form-control" style="min-width:220px;">
-                </div>
-            </div>
-
-            <div class="form-check">
-                <input id="bfRthOnly" class="form-check-input" type="checkbox" checked>
-                <label class="form-check-label">RTH-only <small class="text-muted">(RTH = 09:30–16:00 New York)</small></label>
-            </div>
-
-            <div class="d-flex gap-2">
-                <button id="btnBackfill" class="btn btn-primary" onclick="startBackfill()">Historie laden</button>
-                <button id="btnBackfillCancel" class="btn btn-outline-secondary" onclick="cancelBackfill()" disabled>Abbrechen</button>
-            </div>
-
-            <div id="bfStatus" class="text-muted"></div>
+    <!-- Realtime-Feed -->
+    <div class="card">
+      <div class="card-header">Realtime-Feed</div>
+      <div class="card-body">
+        <div class="btn-group" role="group">
+          <button class="btn btn-success" onclick="startFeed()">Start</button>
+          <button class="btn btn-danger"  onclick="stopFeed()">Stop</button>
         </div>
+      </div>
     </div>
 
-    <!-- Terminal -->
-    <div class="card p-3">
-        <h5>Gateway Log</h5>
-        <pre id="term" style="height: 280px; overflow:auto; background:#111; color:#ddd; padding:12px; border-radius:6px;"></pre>
+    <!-- Backfill -->
+    <div class="card">
+      <div class="card-header">Backfill</div>
+      <div class="card-body">
+        <label class="form-check">
+          <input id="rthOnly" type="checkbox" class="form-check-input" checked />
+          <span class="form-check-label">RTH-only (09:30 – 16:00 NY)</span>
+        </label>
+        <div class="mt-2">
+          <button class="btn btn-success" onclick="backfill1w()">Backfill 1 Woche</button>
+        </div>
+      </div>
     </div>
+
+    <!-- Status -->
+    <div class="card">
+      <div class="card-header">Status</div>
+      <div class="card-body">
+<pre class="mb-0" style="white-space:pre-line">
+Gateway Desired: <span id="gw-desired">-</span>
+Session:         <span id="gw-session">-</span>
+
+Feed Desired:    <span id="md-desired">-</span>
+Feed:            <span id="md-feed">-</span>
+Heartbeat:       <span id="md-heartbeat">-</span>
+Realtime:        <span id="md-realtime">-</span>
+Error:           <span id="md-error">-</span>
+</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rolling-Log -->
+  <div class="card mt-3">
+    <div class="card-header d-flex align-items-center justify-content-between">
+      <span>Rolling Log</span>
+      <div>
+        <button class="btn btn-success btn-sm" onclick="refreshLog()">Refresh</button>
+        <label class="ms-2">
+          <input type="checkbox" id="autoRefresh" checked /> Auto
+        </label>
+      </div>
+    </div>
+    <div class="card-body" style="padding:0">
+      <pre id="logArea" style="margin:0; height:380px; overflow:auto; background:#0f0f13; color:#e7e7e7; padding:12px;"></pre>
+    </div>
+  </div>
+
 </div>
 
 <script>
-    async function post(url){
-      try{
-        const r=await fetch(url,{method:'POST'});
-        if(!r.ok){alert('Fehler: '+(await r.text()));return;}
-        refreshGateway(); refreshFeed();
-      }catch(e){alert('Netzfehler: '+e);}
-    }
+// ---------- Helpers ----------
+function setText(sel, v) {
+  const el = document.querySelector(sel);
+  if (el) el.textContent = v ?? '-';
+}
+function fmtDt(v) {
+  if (!v) return '-';
+  try {
+    const d = new Date(v);
+    if (isNaN(d)) return v;
+    return d.toLocaleString();
+  } catch { return v; }
+}
 
-    async function refreshGateway(){
-      try{
-        const r=await fetch('/api/gateway/status'); if(!r.ok) return;
-        const j=await r.json();
-        document.getElementById('gwStatus').textContent = `Desired=${j.desired} | Session=${j.session}`;
-      }catch{}
-    }
+// ---------- Status ----------
+async function refreshStatus() {
+  try {
+    const r = await fetch('/api/marketdata/status', { cache: 'no-store' });
+    if (!r.ok) throw new Error('status ' + r.status);
+    const s = await r.json();
 
-    async function refreshFeed(){
-      try{
-        const r=await fetch('/api/marketdata/status'); if(!r.ok) return;
-        const j=await r.json();
-        const hb = j.heartbeatUtc ? ` | HB=${j.heartbeatUtc}` : '';
-        const rt = j.lastRealtimeTsUtc ? ` | LastBar=${j.lastRealtimeTsUtc}` : '';
-        const err = j.lastError ? ` | Err=${j.lastError}` : '';
-        document.getElementById('feedStatus').textContent =
-          `Desired=${j.desired} | Session=${j.session} | Feed=${j.feed}${hb}${rt}${err}`;
-      }catch{}
-    }
+    // Gateway
+    setText('#gw-desired', s.gatewayDesired ?? '-');
+    setText('#gw-session', s.session ?? '-');
 
-    // ===== Terminal (pollt /api/marketdata/log) =====
-    async function pollLog(){
-      try{
-        const r=await fetch('/api/marketdata/log');
-        if(!r.ok) return;
-        const t=await r.text();
-        const el=document.getElementById('term');
-        const atBottom = Math.abs(el.scrollHeight - el.scrollTop - el.clientHeight) < 5;
-        el.textContent=t;
-        if(atBottom) el.scrollTop = el.scrollHeight;
-      }catch{}
-      setTimeout(pollLog, 1000);
-    }
-    pollLog(); refreshGateway(); refreshFeed();
+    // Realtime-Feed
+    setText('#md-desired', (s.feedDesired ?? s.desired) ?? '-');
+    setText('#md-feed',    s.feed ?? '-');
 
-    // ===== Backfill-Button =====
-    let bfPollTimer=null, bfCurrentJob=null;
+    // Zeitstempel
+    setText('#md-heartbeat', fmtDt(s.heartbeat));
+    setText('#md-realtime',  fmtDt(s.realtime));
+    setText('#md-error',     s.error ?? '-');
+  } catch (e) {
+    console.error(e);
+  }
+}
 
-    // (Konvertiert datetime-local (lokal) in ISO-UTC, damit der Server es eindeutig versteht)
-    function toIsoUtc(inp){
-      const v=inp.value; if(!v) return null;
-      const local=new Date(v);
-      if(isNaN(local.getTime())) return null;
-      return new Date(local.getTime()-local.getTimezoneOffset()*60000)
-        .toISOString().replace(/\.\d{3}Z$/,'Z');
-    }
 
-    function setBusy(busy,text){
-      document.getElementById('btnBackfill').disabled=!!busy;
-      document.getElementById('btnBackfillCancel').disabled=!!busy;
-      document.getElementById('bfStatus').textContent=text||'';
-    }
 
-    async function startBackfill(){
-      clearTimeout(bfPollTimer); bfCurrentJob=null;
 
-      const mode=document.querySelector('input[name="bfRangeMode"]:checked').value;
-      const months=parseInt(document.getElementById('bfMonths').value||'6',10);
-      const s=toIsoUtc(document.getElementById('bfStartUtc'));
-      const e=toIsoUtc(document.getElementById('bfEndUtc'));
-      const rth=document.getElementById('bfRthOnly').checked;
+// ---------- Log ----------
+async function refreshLog() {
+  try {
+    const r = await fetch('/api/marketdata/log', { cache: 'no-store' });
+    if (!r.ok) return;
+    const t = await r.text();
+    const area = document.querySelector('#logArea');
+    area.textContent = t;
+    area.scrollTop = area.scrollHeight;
+  } catch (e) { console.error(e); }
+}
 
-      const payload={ RthOnly:rth };
-      if(mode==='months'){ payload.Months=isFinite(months)&&months>0?months:6; }
-      else { if(!s||!e){ alert('Bitte gültige Von/Bis-Werte (UTC) angeben.'); return; }
-             payload.StartUtc=s; payload.EndUtc=e; }
+// ---------- Aktionen ----------
+async function startGateway() {
+  await fetch('/api/gateway/start', { method:'POST' });
+  await refreshStatus();
+}
+async function stopGateway() {
+  await fetch('/api/gateway/stop', { method:'POST' });
+  await refreshStatus();
+}
+async function startFeed() {
+  await fetch('/api/marketdata/start', { method:'POST' });
+  await refreshStatus();
+}
+async function stopFeed() {
+  await fetch('/api/marketdata/stop', { method:'POST' });
+  await refreshStatus();
+}
+async function backfill1w() {
+  const rth = document.querySelector('#rthOnly').checked;
+  await fetch('/api/backfill/start/1w', {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json' },
+    body: JSON.stringify({ RthOnly: rth })
+  });
+}
 
-      setBusy(true,'Sende Backfill-Request …');
+// ---------- Auto-Refresh ----------
+let timer = null;
+function setupAuto() {
+  const auto = document.querySelector('#autoRefresh');
+  const start = () => {
+    if (timer) clearInterval(timer);
+    timer = setInterval(async () => {
+      await refreshStatus();
+      await refreshLog();
+    }, 1000);
+  };
+  const stop = () => { if (timer) { clearInterval(timer); timer = null; } };
 
-      try{
-        const res=await fetch('/api/backfill/start',{
-          method:'POST', headers:{'Content-Type':'application/json'},
-          body:JSON.stringify(payload)
-        });
-        if(!(res.status===202||res.status===200)){
-          setBusy(false,'Fehler: '+await res.text()); return;
-        }
-        const data=await res.json(); bfCurrentJob=data.jobId;
-        setBusy(true,'Backfill gestartet: '+bfCurrentJob);
-        pollBackfillStatus();
-      }catch(err){ setBusy(false,'Fehler: '+err); }
-    }
+  auto.addEventListener('change', () => auto.checked ? start() : stop());
+  if (auto.checked) start();
+}
 
-    async function pollBackfillStatus(){
-      if(!bfCurrentJob){ setBusy(false,'Kein Job.'); return; }
-      try{
-        const r=await fetch('/api/backfill/status/'+bfCurrentJob);
-        if(!r.ok){ setBusy(false,'Status nicht verfügbar'); return; }
-        const st=await r.json();
-        const text=`Job ${st.jobId} — ${st.state} — Segmente ${st.segmentsDone}/${st.segmentsPlanned}`
-          +(st.inserted||st.upserts?` — geschrieben: +${st.inserted} / ~${st.upserts} upd`:``);
-        const done=(st.state!=='Queued' && st.state!=='Running');
-        setBusy(!done,text);
-        if(!done) bfPollTimer=setTimeout(pollBackfillStatus,1000);
-      }catch{ bfPollTimer=setTimeout(pollBackfillStatus,1500); }
-    }
-
-    function cancelBackfill(){ alert('Cancel ist (noch) nicht implementiert.'); }
+document.addEventListener('DOMContentLoaded', async () => {
+  await refreshStatus();
+  await refreshLog();
+  setupAuto();
+});
 </script>
+
+
+    <style >
+    :root {
+        --bg: #0d0f14;
+        --card: #141823;
+        --border: #23293a;
+        --text: #e7e7e7;
+        --muted: #b9c0ce;
+        --ok: #2f9e63;
+        --err: #d34a4a;
+        --radius: 10px;
+    }
+
+    .container.finance-page {
+        max-width: 1200px;
+        margin: auto;
+        padding: 8px 10px 22px;
+    }
+
+    .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    .card {
+        background: var(--card);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: 0 1px 0 rgba(255,255,255,0.02),0 8px 24px rgba(0,0,0,0.22);
+    }
+
+    .card-header {
+        font-weight: 600;
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--border);
+        letter-spacing: .2px;
+    }
+
+    .card-body {
+        padding: 14px;
+    }
+
+    .btn {
+        padding: 6px 11px;
+        border-radius: 8px;
+        line-height: 1;
+        border: 0;
+        cursor: pointer
+    }
+
+        .btn:focus {
+            outline: none
+        }
+
+    .btn-success {
+        background: var(--ok)
+    }
+
+        .btn-success:focus {
+            box-shadow: 0 0 0 2px rgba(47,158,99,.25)
+        }
+
+    .btn-danger {
+        background: var(--err)
+    }
+
+        .btn-danger:focus {
+            box-shadow: 0 0 0 2px rgba(211,74,74,.25)
+        }
+
+    .btn-sm {
+        padding: 4px 10px;
+        font-size: .9rem
+    }
+
+    .form-check-input {
+        margin-right: 6px;
+        transform: translateY(1px)
+    }
+
+    .card .card-body pre {
+        margin: 0;
+        padding: 2px 0;
+        background: transparent;
+        font-family: ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+        font-size: .95rem;
+        line-height: 1.25rem;
+        color: var(--muted);
+        white-space: pre; /* (kein zusätzliches Zeilenhöhen-Spacing) */
+        font-variant-numeric: tabular-nums; /* (gleich breite Ziffern für saubere Spalten) */
+    }
+
+    #logArea {
+        margin: 0;
+        height: 380px;
+        overflow: auto;
+        background: #0f0f13;
+        color: var(--text);
+        padding: 12px;
+        font-family: ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+        font-size: .95rem;
+        line-height: 1.25rem;
+    }
+</style>
+
